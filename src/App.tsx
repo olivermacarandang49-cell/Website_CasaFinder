@@ -35,7 +35,6 @@ import {
   Mail,
   Phone,
   Upload,
-  Settings,
   Bell,
   Save,
   GraduationCap,
@@ -49,16 +48,13 @@ import {
   SlidersHorizontal,
   KeyRound,
   ArrowLeft,
-  HelpCircle,
   Sun,
   Moon,
   Globe,
-  Languages,
   Smartphone,
   Laptop,
   Fingerprint,
   AlertTriangle,
-  Activity,
   Facebook,
   PhoneCall,
   MoreVertical
@@ -131,17 +127,18 @@ interface ActiveSession {
   current: boolean;
 }
 
+const DEFAULT_DEMO_USERS = [
+  { name: "Juan Dela Cruz", username: "juan.student", role: "student" as const, password: "123", email: "juan.delacruz@gmail.com", mobile: "09171234567", facebook: "https://facebook.com/juan.delacruz", school: "SLSU Gumaca Campus", bio: "Tenant & College Student looking for room near SLSU Campus", address: "Brgy. Mabini, Gumaca, Quezon", emergencyContact: "Maria Dela Cruz (09181112222)", avatar: "🎓", permitNo: "", permitFile: "", permitStatus: "", accountStatus: "approved" as const },
+  { name: "Aling Nena", username: "nena.landlord", role: "landlord" as const, password: "123", email: "alingnena.housing@gmail.com", mobile: "09987654321", facebook: "https://facebook.com/alingnena.housing", school: "Nena's Student & Worker Residences", bio: "Owner of Nena's Student & Worker Residences in Brgy. Tabing Dagat, Gumaca. Providing clean and safe lodgings for tenants since 2018.", address: "Brgy. Tabing Dagat, Gumaca, Quezon", emergencyContact: "Barangay Office (042-311-1234)", avatar: "🏠", permitNo: "2026-0881", permitFile: "Mayors_Permit_2026.pdf", permitStatus: "Verified", accountStatus: "approved" as const },
+  { name: "Gumaca LGU Housing Admin", username: "admin.gumaca", role: "admin" as const, password: "admin", email: "admin.housing@gumaca.gov.ph", mobile: "09190008888", facebook: "https://facebook.com/gumaca.lgu", school: "Municipal Housing Regulatory Office", bio: "Authorized Municipal Housing Regulatory Officer for Gumaca, Quezon. Overseeing safety compliance, mayor's permits, and student dorm welfare.", address: "Municipal Hall, Brgy. San Diego, Gumaca, Quezon", emergencyContact: "Mayor's Office (042-311-9999)", avatar: "🛡️", permitNo: "SYS-ADMIN-01", permitFile: "LGU_System_Auth.pdf", permitStatus: "System Admin", accountStatus: "approved" as const },
+  { name: "Campus Housing Officer", username: "admin.campus", role: "admin" as const, password: "admin", email: "housing.officer@slsu.edu.ph", mobile: "09190007777", facebook: "https://facebook.com/slsu.gumaca.housing", school: "SLSU & EQC Student Affairs Office", bio: "Official Student Housing Coordinator for SLSU & Eastern Quezon College. Verifying accreditation and safety for student lodgings.", address: "SLSU Campus, Brgy. Mabini, Gumaca, Quezon", emergencyContact: "Campus Security (042-311-8888)", avatar: "👑", permitNo: "SYS-ADMIN-02", permitFile: "SLSU_Officer_Auth.pdf", permitStatus: "System Admin", accountStatus: "approved" as const }
+];
+
 export default function App() {
   // Loading and Authentication States
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [authMode, setAuthMode] = useState<"login" | "signup" | "forgot" | "adminLogin">("login");
-  const DEFAULT_DEMO_USERS = [
-    { name: "Juan Dela Cruz", username: "juan.student", role: "student" as const, password: "123", email: "juan.delacruz@gmail.com", mobile: "09171234567", facebook: "https://facebook.com/juan.delacruz", school: "SLSU Gumaca Campus", bio: "Tenant & College Student looking for room near SLSU Campus", address: "Brgy. Mabini, Gumaca, Quezon", emergencyContact: "Maria Dela Cruz (09181112222)", avatar: "🎓", permitNo: "", permitFile: "", permitStatus: "", accountStatus: "approved" as const },
-    { name: "Aling Nena", username: "nena.landlord", role: "landlord" as const, password: "123", email: "alingnena.housing@gmail.com", mobile: "09987654321", facebook: "https://facebook.com/alingnena.housing", school: "Nena's Student & Worker Residences", bio: "Owner of Nena's Student & Worker Residences in Brgy. Tabing Dagat, Gumaca. Providing clean and safe lodgings for tenants since 2018.", address: "Brgy. Tabing Dagat, Gumaca, Quezon", emergencyContact: "Barangay Office (042-311-1234)", avatar: "🏠", permitNo: "2026-0881", permitFile: "Mayors_Permit_2026.pdf", permitStatus: "Verified", accountStatus: "approved" as const },
-    { name: "Gumaca LGU Housing Admin", username: "admin.gumaca", role: "admin" as const, password: "admin", email: "admin.housing@gumaca.gov.ph", mobile: "09190008888", facebook: "https://facebook.com/gumaca.lgu", school: "Municipal Housing Regulatory Office", bio: "Authorized Municipal Housing Regulatory Officer for Gumaca, Quezon. Overseeing safety compliance, mayor's permits, and student dorm welfare.", address: "Municipal Hall, Brgy. San Diego, Gumaca, Quezon", emergencyContact: "Mayor's Office (042-311-9999)", avatar: "🛡️", permitNo: "SYS-ADMIN-01", permitFile: "LGU_System_Auth.pdf", permitStatus: "System Admin", accountStatus: "approved" as const },
-    { name: "Campus Housing Officer", username: "admin.campus", role: "admin" as const, password: "admin", email: "housing.officer@slsu.edu.ph", mobile: "09190007777", facebook: "https://facebook.com/slsu.gumaca.housing", school: "SLSU & EQC Student Affairs Office", bio: "Official Student Housing Coordinator for SLSU & Eastern Quezon College. Verifying accreditation and safety for student lodgings.", address: "SLSU Campus, Brgy. Mabini, Gumaca, Quezon", emergencyContact: "Campus Security (042-311-8888)", avatar: "👑", permitNo: "SYS-ADMIN-02", permitFile: "SLSU_Officer_Auth.pdf", permitStatus: "System Admin", accountStatus: "approved" as const }
-  ];
 
   const [registeredUsers, setRegisteredUsers] = useState<{ name: string; username: string; role: "student" | "landlord" | "admin"; password?: string; email?: string; mobile?: string; school?: string; bio?: string; address?: string; emergencyContact?: string; avatar?: string; facebook?: string; facebookLink?: string; permitNo?: string; permitFile?: string; permitStatus?: string; accountStatus?: "pending" | "approved" | "rejected"; age?: string; gender?: string; occupation?: string; prefLocation?: string; prefType?: string; budgetMin?: string; budgetMax?: string; occupants?: string; moveIn?: string; stayDuration?: string; pets?: string; smoking?: string; businessName?: string; yearsOperation?: string; }[]>(() => {
     const saved = localStorage.getItem("casafinder_registered_users");
@@ -196,12 +193,10 @@ export default function App() {
 
   // Login Form States
   const [loginRole, setLoginRole] = useState<"student" | "landlord" | "admin">("student");
-  const [loginName, setLoginName] = useState("");
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [signupEmail, setSignupEmail] = useState("");
-  const [signupMobile, setSignupMobile] = useState("");
   const [loginError, setLoginError] = useState("");
 
   // Forgot Password States
@@ -461,7 +456,6 @@ export default function App() {
 
   // Loading States for UX Improvements
   const [isSearchLoading, setIsSearchLoading] = useState(false);
-  const [isMatchingLoading, setIsMatchingLoading] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   // Simulate startup loading screen with dynamic progress
@@ -647,11 +641,9 @@ export default function App() {
       setShowOnboardingModal(true);
 
       // Reset
-      setLoginName("");
       setLoginUsername("");
       setLoginPassword("");
       setSignupEmail("");
-      setSignupMobile("");
       setLoginError("");
     } else {
       // Login mode - accept Username OR Email OR Mobile Number
@@ -722,11 +714,9 @@ export default function App() {
       setShowOnboardingModal(false);
 
       // Reset
-      setLoginName("");
       setLoginUsername("");
       setLoginPassword("");
       setSignupEmail("");
-      setSignupMobile("");
       setLoginError("");
     }
   };
@@ -1084,12 +1074,6 @@ export default function App() {
             ? "Matagumpay na na-update ang iyong Security, Password, at PIN!"
             : "Your Security, Password, and PIN settings have been saved successfully!"
         );
-      } else {
-        setProfileSuccessMsg(
-          prefLanguage === "tagalog"
-            ? "Matagumpay na na-update ang iyong Profile!"
-            : "Your profile details have been saved successfully!"
-        );
       }
 
       // Sync landlord properties with new profile details
@@ -1120,9 +1104,9 @@ export default function App() {
       }
 
       setProfileSuccessMsg(
-        prefLanguage === "english"
-          ? "Successfully saved your Profile and Settings! ✨"
-          : "Na-save nang matagumpay ang iyong Profile at Settings! ✨"
+        prefLanguage === "tagalog"
+          ? "Na-save nang matagumpay ang iyong Profile at Settings! ✨"
+          : "Successfully saved your Profile and Settings! ✨"
       );
       setTimeout(() => {
         setProfileSuccessMsg("");

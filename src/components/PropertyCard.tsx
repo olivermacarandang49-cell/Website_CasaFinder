@@ -1,7 +1,7 @@
 import { Property } from "../data/properties";
 import { AiMatch } from "../types";
 import { motion } from "motion/react";
-import { MapPin, BedDouble, Bath, Maximize, Star, UserCheck, Edit3, ShieldCheck, GraduationCap, Map } from "lucide-react";
+import { MapPin, BedDouble, Bath, Star, UserCheck, Edit3, ShieldCheck, GraduationCap, Map } from "lucide-react";
 import { getSchoolDistancesForProperty } from "../utils/schoolDistances";
 import { getTranslation, Language } from "../utils/translations";
 
