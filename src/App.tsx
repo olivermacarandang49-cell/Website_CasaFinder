@@ -143,7 +143,7 @@ export default function App() {
     { name: "Campus Housing Officer", username: "admin.campus", role: "admin" as const, password: "admin", email: "housing.officer@slsu.edu.ph", mobile: "09190007777", facebook: "https://facebook.com/slsu.gumaca.housing", school: "SLSU & EQC Student Affairs Office", bio: "Official Student Housing Coordinator for SLSU & Eastern Quezon College. Verifying accreditation and safety for student lodgings.", address: "SLSU Campus, Brgy. Mabini, Gumaca, Quezon", emergencyContact: "Campus Security (042-311-8888)", avatar: "👑", permitNo: "SYS-ADMIN-02", permitFile: "SLSU_Officer_Auth.pdf", permitStatus: "System Admin", accountStatus: "approved" as const }
   ];
 
-  const [registeredUsers, setRegisteredUsers] = useState<{ name: string; username: string; role: "student" | "landlord" | "admin"; password?: string; email?: string; mobile?: string; school?: string; bio?: string; address?: string; emergencyContact?: string; avatar?: string; facebook?: string; permitNo?: string; permitFile?: string; permitStatus?: string; accountStatus?: "pending" | "approved" | "rejected"; age?: string; gender?: string; occupation?: string; prefLocation?: string; prefType?: string; budgetMin?: string; budgetMax?: string; occupants?: string; moveIn?: string; stayDuration?: string; pets?: string; smoking?: string; businessName?: string; yearsOperation?: string; }[]>(() => {
+  const [registeredUsers, setRegisteredUsers] = useState<{ name: string; username: string; role: "student" | "landlord" | "admin"; password?: string; email?: string; mobile?: string; school?: string; bio?: string; address?: string; emergencyContact?: string; avatar?: string; facebook?: string; facebookLink?: string; permitNo?: string; permitFile?: string; permitStatus?: string; accountStatus?: "pending" | "approved" | "rejected"; age?: string; gender?: string; occupation?: string; prefLocation?: string; prefType?: string; budgetMin?: string; budgetMax?: string; occupants?: string; moveIn?: string; stayDuration?: string; pets?: string; smoking?: string; businessName?: string; yearsOperation?: string; }[]>(() => {
     const saved = localStorage.getItem("casafinder_registered_users");
     if (saved) {
       try {
@@ -241,6 +241,7 @@ export default function App() {
   const [onboardingYearsOperation, setOnboardingYearsOperation] = useState("");
   const [onboardingLandlordGender, setOnboardingLandlordGender] = useState("");
   const [onboardingLandlordFacebook, setOnboardingLandlordFacebook] = useState("");
+  const [onboardingLandlordFacebookLink, setOnboardingLandlordFacebookLink] = useState("");
   const [onboardingLandlordBarangay, setOnboardingLandlordBarangay] = useState("");
   const [onboardingLandlordPermitNo, setOnboardingLandlordPermitNo] = useState("");
 
@@ -257,6 +258,7 @@ export default function App() {
   const [profileEditEmergencyContact, setProfileEditEmergencyContact] = useState("");
   const [profileEditAvatar, setProfileEditAvatar] = useState("");
   const [profileEditFacebook, setProfileEditFacebook] = useState("");
+  const [profileEditFacebookLink, setProfileEditFacebookLink] = useState("");
   const [profileEditSchool, setProfileEditSchool] = useState("");
   const [profileEditBio, setProfileEditBio] = useState("");
   const [profileEditPermitNo, setProfileEditPermitNo] = useState("");
@@ -771,6 +773,7 @@ export default function App() {
             ...base,
             gender: onboardingLandlordGender || u.gender,
             facebook: onboardingLandlordFacebook.trim() || (u as any).facebook || "",
+            facebookLink: onboardingLandlordFacebookLink.trim() || (u as any).facebookLink || "",
             address: onboardingLandlordBarangay.trim() || u.address,
             school: onboardingBusinessName.trim() || u.school,
             permitNo: onboardingLandlordPermitNo.trim() || u.permitNo,
@@ -904,7 +907,7 @@ export default function App() {
     setOnboardingOccupants("1"); setOnboardingMoveIn(""); setOnboardingStayDuration("");
     setOnboardingPets(""); setOnboardingSmoking("");
     setOnboardingBusinessName(""); setOnboardingYearsOperation("");
-    setOnboardingLandlordGender(""); setOnboardingLandlordFacebook("");
+    setOnboardingLandlordGender(""); setOnboardingLandlordFacebook(""); setOnboardingLandlordFacebookLink("");
     setOnboardingLandlordBarangay(""); setOnboardingLandlordPermitNo("");
     setShowOnboardingModal(true);
   };
@@ -938,6 +941,7 @@ export default function App() {
     setProfileEditEmergencyContact(current.emergencyContact || "");
     setProfileEditAvatar(current.avatar || (current.role === "student" ? "🎓" : "🏠"));
     setProfileEditFacebook(current.facebook || "");
+    setProfileEditFacebookLink((current as any).facebookLink || "");
     setProfileEditSchool(current.school || "");
     setProfileEditBio(current.bio || "");
     setProfileEditPermitNo(current.permitNo || "");
@@ -1015,6 +1019,7 @@ export default function App() {
             emergencyContact: profileEditEmergencyContact.trim(),
             avatar: profileEditAvatar.trim(),
             facebook: profileEditFacebook.trim(),
+            facebookLink: profileEditFacebookLink.trim(),
             school: profileEditSchool.trim(),
             bio: profileEditBio.trim(),
             permitNo: profileEditPermitNo.trim(),
@@ -1102,7 +1107,7 @@ export default function App() {
                 landlordEmail: profileEditEmail.trim() || p.landlordEmail,
                 landlordBio: profileEditBio.trim() || p.landlordBio,
                 landlordAvatar: profileEditAvatar.trim() || p.landlordAvatar,
-                landlordFacebook: profileEditFacebook.trim() || p.landlordFacebook,
+                landlordFacebook: profileEditFacebookLink.trim() || profileEditFacebook.trim() || p.landlordFacebook,
                 landlordPermits: {
                   ...p.landlordPermits,
                   businessPermit: profileEditPermitNo.trim() ? `BP-GMC-${profileEditPermitNo.trim()}` : p.landlordPermits?.businessPermit
@@ -3195,10 +3200,29 @@ export default function App() {
                               className="w-full bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 focus:border-pink-500 rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-sm text-stone-800 dark:text-stone-100 focus:outline-none font-mono" />
                           </div>
                           {/* Facebook */}
-                          <div className="space-y-0.5">
-                            <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">📘 Facebook / Messenger</label>
-                            <input type="text" placeholder="fb.com/yourbusiness" value={onboardingLandlordFacebook} onChange={e => setOnboardingLandlordFacebook(e.target.value)}
-                              className="w-full bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 focus:border-pink-500 rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-sm text-stone-800 dark:text-stone-100 focus:outline-none font-medium" />
+                          {/* Facebook Name + Link */}
+                          <div className="col-span-2 space-y-2">
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">📘 Facebook Name <span className="text-stone-400 font-normal normal-case">(para sa display)</span></label>
+                              <input type="text" placeholder="e.g. Lorena Dacup" value={onboardingLandlordFacebook} onChange={e => setOnboardingLandlordFacebook(e.target.value)}
+                                className="w-full bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 focus:border-blue-500 rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-sm text-stone-800 dark:text-stone-100 focus:outline-none font-medium" />
+                            </div>
+                            <div className="space-y-0.5">
+                              <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-stone-600 dark:text-stone-300">🔗 Facebook Link <span className="text-stone-400 font-normal normal-case">(optional — para sa clickable button)</span></label>
+                              <input type="text" placeholder="e.g. facebook.com/lorena.dacup" value={onboardingLandlordFacebookLink} onChange={e => setOnboardingLandlordFacebookLink(e.target.value)}
+                                className="w-full bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 focus:border-blue-500 rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-sm text-stone-800 dark:text-stone-100 focus:outline-none font-medium" />
+                              {/* Collapsible tip */}
+                              <details className="mt-1">
+                                <summary className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold cursor-pointer select-none">Paano makuha ang iyong FB link? 👆</summary>
+                                <div className="mt-1.5 p-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl text-[10px] text-stone-600 dark:text-stone-300 space-y-1 leading-relaxed">
+                                  <p>1. 📱 Buksan ang <strong>Facebook app</strong></p>
+                                  <p>2. 👤 I-tap ang iyong <strong>profile picture</strong></p>
+                                  <p>3. ··· I-tap ang <strong>"···"</strong> (three dots)</p>
+                                  <p>4. 🔗 I-tap ang <strong>"Copy Link"</strong></p>
+                                  <p>5. 📋 I-paste dito</p>
+                                </div>
+                              </details>
+                            </div>
                           </div>
 
                           {/* Divider — Business Info */}
@@ -3648,6 +3672,7 @@ export default function App() {
                 mobile: actualMobile,
                 email: actualEmail,
                 facebook: (matchedUser as any)?.facebook || landlordProfileProperty.landlordFacebook || "",
+                facebookLink: (matchedUser as any)?.facebookLink || "",
                 avatar: actualAvatar,
                 bio: actualBio,
                 permits: actualPermits,
@@ -4557,18 +4582,43 @@ export default function App() {
                     </div>
 
                     {/* Facebook Profile Link / Messenger */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 flex items-center gap-1">
-                        <Facebook className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                        {prefLanguage === "tagalog" ? "Facebook Account / Profile Link (Messenger)" : "Facebook Profile Link / Messenger"}
-                      </label>
-                      <input
-                        type="text"
-                        value={profileEditFacebook}
-                        onChange={(e) => setProfileEditFacebook(e.target.value)}
-                        className="w-full bg-stone-50 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white dark:focus:bg-stone-800 rounded-xl px-3 py-2 text-xs text-stone-800 dark:text-stone-100 font-medium outline-none"
-                        placeholder="e.g. Lorena Dacup or https://facebook.com/your.profile"
-                      />
+                    <div className="space-y-2">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 flex items-center gap-1">
+                          <Facebook className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                          Facebook Name <span className="text-stone-400 font-normal normal-case ml-1">(para sa display)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profileEditFacebook}
+                          onChange={(e) => setProfileEditFacebook(e.target.value)}
+                          className="w-full bg-stone-50 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white dark:focus:bg-stone-800 rounded-xl px-3 py-2 text-xs text-stone-800 dark:text-stone-100 font-medium outline-none"
+                          placeholder="e.g. Lorena Dacup"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 flex items-center gap-1">
+                          <Facebook className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                          Facebook Link <span className="text-stone-400 font-normal normal-case ml-1">(optional — para sa clickable button)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profileEditFacebookLink}
+                          onChange={(e) => setProfileEditFacebookLink(e.target.value)}
+                          className="w-full bg-stone-50 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:bg-white dark:focus:bg-stone-800 rounded-xl px-3 py-2 text-xs text-stone-800 dark:text-stone-100 font-medium outline-none"
+                          placeholder="e.g. facebook.com/lorena.dacup"
+                        />
+                        <details className="mt-0.5">
+                          <summary className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold cursor-pointer select-none">Paano makuha ang iyong FB link? 👆</summary>
+                          <div className="mt-1.5 p-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl text-[10px] text-stone-600 dark:text-stone-300 space-y-1 leading-relaxed">
+                            <p>1. 📱 Buksan ang <strong>Facebook app</strong></p>
+                            <p>2. 👤 I-tap ang iyong <strong>profile picture</strong></p>
+                            <p>3. ··· I-tap ang <strong>"···"</strong> (three dots)</p>
+                            <p>4. 🔗 I-tap ang <strong>"Copy Link"</strong></p>
+                            <p>5. 📋 I-paste dito</p>
+                          </div>
+                        </details>
+                      </div>
                     </div>
 
                     {/* School / Institution / Business */}

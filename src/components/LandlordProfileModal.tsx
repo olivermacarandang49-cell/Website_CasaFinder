@@ -12,6 +12,7 @@ interface LandlordProfileModalProps {
     mobile?: string;
     email?: string;
     facebook?: string;
+    facebookLink?: string;
     avatar?: string;
     bio?: string;
     address?: string;
@@ -45,6 +46,7 @@ export default function LandlordProfileModal({
   const mobile = landlordInfo.mobile || "";
   const email = landlordInfo.email || "";
   const facebook = landlordInfo.facebook || "";
+  const facebookLink = landlordInfo.facebookLink || "";
   const isTagalog = language === "tagalog";
 
   const bio = landlordInfo.bio || "";
@@ -169,20 +171,22 @@ export default function LandlordProfileModal({
             </a>
             )}
 
-            {!mobile && !email && (
+            {!mobile && !email && !facebook && !facebookLink && (
               <p className="col-span-2 text-xs text-stone-400 italic text-center py-2">No contact info provided yet.</p>
             )}
 
-            {facebook && (
-              <div className={`flex items-center gap-3 p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-2xl ${(facebook.startsWith("http") || facebook.includes("facebook.com")) ? "cursor-pointer hover:bg-blue-100/90 dark:hover:bg-blue-900/50 transition-all group" : ""} sm:col-span-2`}>
+            {(facebook || facebookLink) && (
+              <div className={`flex items-center gap-3 p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-2xl ${facebookLink ? "cursor-pointer hover:bg-blue-100/90 dark:hover:bg-blue-900/50 transition-all group" : ""} sm:col-span-2`}>
                 <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs shrink-0 group-hover:scale-105 transition-transform">
                   <Facebook className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] uppercase font-bold text-blue-900 dark:text-blue-300 tracking-wider">Facebook / Messenger</p>
-                  {facebook.startsWith("http") || facebook.includes("facebook.com") ? (
-                    <a href={facebook.startsWith("http") ? facebook : `https://${facebook}`} target="_blank" rel="noopener noreferrer"
-                      className="text-xs font-medium text-blue-700 dark:text-blue-200 truncate hover:underline block">{facebook}</a>
+                  {facebookLink ? (
+                    <a href={facebookLink.startsWith("http") ? facebookLink : `https://${facebookLink}`} target="_blank" rel="noopener noreferrer"
+                      className="text-xs font-medium text-blue-700 dark:text-blue-200 truncate hover:underline block">
+                      {facebook || facebookLink}
+                    </a>
                   ) : (
                     <p className="text-xs font-medium text-blue-950 dark:text-blue-100 truncate">{facebook}</p>
                   )}
