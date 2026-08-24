@@ -1,0 +1,6 @@
+{
+  "name": "CasaFinder",
+  "description": "An elegant AI-powered real estate and neighborhood finder localized exclusively for Gumaca, Quezon, matching your preferences and answering housing questions dynamically.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

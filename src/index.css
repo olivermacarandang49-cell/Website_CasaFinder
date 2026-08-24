@@ -1,0 +1,243 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+}
+
+/* Dark mode root theme */
+html.dark,
+html.dark body {
+  background-color: #09090b !important;
+  color: #f4f4f5 !important;
+  color-scheme: dark;
+}
+
+/* Automatic dark container surface fallbacks */
+html.dark .bg-white {
+  background-color: #121214;
+  border-color: #27272a;
+}
+
+html.dark .bg-\[\#faf9f6\] {
+  background-color: #09090b !important;
+}
+
+html.dark .bg-stone-50 {
+  background-color: #121214;
+  border-color: #27272a;
+}
+
+html.dark .bg-stone-100 {
+  background-color: #18181b;
+  border-color: #27272a;
+}
+
+html.dark .border-stone-200 {
+  border-color: #27272a;
+}
+
+html.dark .border-stone-100 {
+  border-color: #1c1917;
+}
+
+/* Translucent white containers fallback in dark mode */
+html.dark .bg-white\/95 {
+  background-color: rgba(18, 18, 20, 0.95);
+  border-color: #27272a;
+}
+
+html.dark .bg-white\/90 {
+  background-color: rgba(18, 18, 20, 0.90);
+  border-color: #27272a;
+}
+
+html.dark .bg-white\/80 {
+  background-color: rgba(18, 18, 20, 0.80);
+  border-color: #27272a;
+}
+
+html.dark .bg-white\/70 {
+  background-color: rgba(18, 18, 20, 0.70);
+  border-color: #27272a;
+}
+
+/* Fix black-on-black text: Ensure dark stone text becomes bright in dark mode */
+html.dark .text-stone-950,
+html.dark .text-stone-900,
+html.dark .text-stone-850 {
+  color: #f4f4f5;
+}
+
+html.dark .text-stone-800 {
+  color: #e4e4e7;
+}
+
+html.dark .text-stone-700 {
+  color: #d4d4d8;
+}
+
+html.dark .text-stone-600 {
+  color: #a1a1aa;
+}
+
+/* Ensure bright accent badges (e.g. Pending, Warning, Yellow Pills) ALWAYS maintain sharp dark text */
+html.dark .bg-amber-300,
+html.dark .bg-amber-400,
+html.dark .bg-amber-500,
+html.dark .bg-yellow-300,
+html.dark .bg-yellow-400,
+html.dark .bg-yellow-500 {
+  color: #09090b !important;
+}
+
+html.dark .bg-amber-300 *,
+html.dark .bg-amber-400 *,
+html.dark .bg-amber-500 *,
+html.dark .bg-yellow-300 *,
+html.dark .bg-yellow-400 *,
+html.dark .bg-yellow-500 * {
+  color: #09090b !important;
+}
+
+/* Input, select, and form elements in dark mode */
+html.dark input,
+html.dark textarea,
+html.dark select {
+  color-scheme: dark;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #71717a;
+}
+
+html.dark .custom-leaflet-property-popup .leaflet-popup-content-wrapper {
+  background-color: #121214 !important;
+  border-color: #27272a !important;
+  color: #f4f4f5 !important;
+}
+
+html.dark .custom-leaflet-property-popup .leaflet-popup-tip {
+  background: #121214 !important;
+}
+
+/* Custom fade transitions for interactive components */
+.pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Leaflet DivIcon clean background reset */
+.leaflet-container {
+  touch-action: none !important;
+  -webkit-tap-highlight-color: transparent;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 10;
+}
+
+/* Hide scrollbar utility for clean horizontal jump bar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hide scrollbars globally on mobile screens (max-width: 768px) */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  * {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+}
+
+/* Mobile-only positioning and styling for zoom controls (+ and -) */
+@media (max-width: 639px) {
+  .leaflet-top.leaflet-left {
+    top: 115px !important;
+    left: 12px !important;
+  }
+
+  .leaflet-control-zoom {
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+    border-radius: 14px !important;
+    overflow: hidden;
+    background: #ffffff !important;
+  }
+
+  .leaflet-control-zoom a {
+    width: 38px !important;
+    height: 38px !important;
+    line-height: 38px !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(8px);
+    transition: all 0.15s ease;
+  }
+
+  .leaflet-control-zoom a:first-child {
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .leaflet-control-zoom a:active {
+    background-color: #f1f5f9 !important;
+    transform: scale(0.95);
+  }
+}
+
+.leaflet-div-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Custom Leaflet Property Popup styling matching user design */
+.custom-leaflet-property-popup .leaflet-popup-content-wrapper {
+  padding: 14px !important;
+  border-radius: 24px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e7e5e4 !important;
+  background-color: #ffffff !important;
+}
+
+.custom-leaflet-property-popup .leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+  width: 250px !important;
+}
+
+.custom-leaflet-property-popup .leaflet-popup-tip {
+  background: #ffffff !important;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: .4;
+  }
+}
