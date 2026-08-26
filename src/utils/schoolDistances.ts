@@ -91,10 +91,10 @@ export const DEFAULT_GUMACA_SCHOOLS = [
     name: "SLSU Tabing Dagat Main Campus 🎓",
     shortName: "SLSU Tabing Dagat",
     type: "University" as const,
-    lat: 13.923258,
-    lng: 122.101460,
-    entranceLat: 13.922850,
-    entranceLng: 122.101350,
+    lat: 13.9230,
+    lng: 122.1014,
+    entranceLat: 13.9230,
+    entranceLng: 122.1014,
     isEntranceInvisible: false,
     desc: "Southern Luzon State University - Main/Tabing Dagat Campus"
   },
@@ -115,10 +115,10 @@ export const DEFAULT_GUMACA_SCHOOLS = [
     name: "Gumaca National High School (GNHS) 🏫",
     shortName: "Gumaca NHS",
     type: "High School" as const,
-    lat: 13.920500,
-    lng: 122.094000,
-    entranceLat: 13.920500,
-    entranceLng: 122.094200,
+    lat: 13.9182,
+    lng: 122.0956,
+    entranceLat: 13.9182,
+    entranceLng: 122.0956,
     isEntranceInvisible: false,
     desc: "Gumaca National High School, Mabini/Poblacion"
   },
@@ -380,7 +380,7 @@ export function parsePropertyLatLng(coords: any, neighborhood?: string, property
   // Fallback by neighborhood if coordinates are unavailable or invalid
   const n = (neighborhood || "").toLowerCase();
   if (n.includes("villa nava")) return [13.912125, 122.104057];
-  if (n.includes("tabing dagat")) return [13.923258, 122.101460];
+  if (n.includes("tabing dagat")) return [13.9230, 122.1014];
   if (n.includes("peñafrancia") || n.includes("penafrancia")) return [13.924800, 122.095500];
   if (n.includes("pipisik")) return [13.925200, 122.097500];
   if (n.includes("san diego")) return [13.920200, 122.103800];
@@ -394,7 +394,7 @@ export function parsePropertyLatLng(coords: any, neighborhood?: string, property
   if (n.includes("rosario")) return [13.924000, 122.099000];
 
   // Default Gumaca Poblacion center
-  return [13.923258, 122.101460];
+  return [13.9230, 122.1014];
 }
 
 /**

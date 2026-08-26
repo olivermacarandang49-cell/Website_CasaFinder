@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import L from "leaflet";
 import { motion } from "motion/react";
 import { GUMACA_SCHOOLS, getSchoolDistancesForProperty, getGumacaSchools, saveCustomSchoolCoord, resetCustomSchoolCoords, addCustomSchoolItem, deleteCustomSchoolItem, saveCustomPropertyCoord, getCustomPropertyCoords, resetCustomPropertyCoords, parsePropertyLatLng } from "../utils/schoolDistances";
 import { AiMatch } from "../types";
 import { Property } from "../data/properties";
-import { Map, MapPin, Navigation, Layers, Compass, ExternalLink, School, Info, Search, Maximize2, Minimize2, Pencil, Trash2, Copy, Check, RotateCcw, Save, Ruler, Shapes, Footprints, GripHorizontal } from "lucide-react";
+import { Map, MapPin, Navigation, Layers, Compass, ExternalLink, School, Info, Search, Maximize2, Minimize2, Pencil, Trash2, Copy, Check, RotateCcw, Save, Ruler, Footprints, GripHorizontal } from "lucide-react";
 
 interface NeighborhoodMapProps {
   properties: Property[];
@@ -37,10 +37,10 @@ const GUMACA_LANDMARKS = [
   { name: "📍 Brgy. Rosario", lat: 13.924000, lng: 122.099000, type: "Barangay", desc: "Barangay Rosario, Gumaca" },
 
   // Key Landmarks
-  { name: "SLSU Villa Nava Campus 🎓🌳", lat: 13.912125, lng: 122.104057, type: "University", desc: "Campus - Brgy. Villa Nava" },
-  { name: "SLSU Tabing Dagat 🎓🌊", lat: 13.923258, lng: 122.101460, type: "University", desc: "Campus - Brgy. Tabing Dagat" },
+  { name: "SLSU Villa Nava 🎓", lat: 13.912125, lng: 122.104057, type: "University", desc: "Campus - Brgy. Villa Nava" },
+  { name: "SLSU Tabing Dagat 🎓🌊", lat: 13.9230, lng: 122.1014, type: "University", desc: "Campus - Brgy. Tabing Dagat" },
   { name: "Eastern Quezon College (EQC) 🏛️", lat: 13.923315, lng: 122.097557, type: "College", desc: "College, Gumaca" },
-  { name: "Gumaca National High School (GNHS) 🏫", lat: 13.920500, lng: 122.094000, type: "High School", desc: "Gumaca NHS, Mabini/Poblacion" },
+  { name: "Gumaca National High School (GNHS) 🏫", lat: 13.9182, lng: 122.0956, type: "High School", desc: "Gumaca NHS, Mabini/Poblacion" },
   { name: "Gumaca West & East Central Schools 🏫", lat: 13.918000, lng: 122.099000, type: "School", desc: "M.H. Del Pilar St. / Capisonda St." },
   { name: "Holy Child Academy / Sacred Heart 🏫", lat: 13.921500, lng: 122.099500, type: "High School", desc: "Holy Child Academy, Town Proper" },
   { name: "San Diego de Alcala Cathedral ⛪", lat: 13.921587, lng: 122.099428, type: "Church", desc: "Historic Parish Church, Town Proper" },
@@ -55,10 +55,10 @@ const GUMACA_LANDMARKS = [
   { name: "Gumaca Public Market 🛒🐟", lat: 13.920509, lng: 122.101597, type: "Market", desc: "Public Market & Commercial Hub, Poblacion" },
   { name: "Puregold Gumaca 🟡🛒", lat: 13.921103, lng: 122.105650, type: "Shopping", desc: "Puregold Supermarket, Maharlika Highway / San Diego" },
   { name: "Jeep Terminal (Macalelon, Unisan, Lopez) 🚐", lat: 13.919680, lng: 122.100656, type: "Transit", desc: "Jeepney Terminal for Macalelon, Unisan & Lopez" },
-  { name: "Jeep Terminal (Lopez) 🚐", lat: 13.922163, lng: 122.100909, type: "Transit", desc: "Jeepney Terminal bound for Lopez" },
+  { name: "Jeep Terminal (Lopez) 🚐", lat: 13.9222, lng: 122.1009, type: "Transit", desc: "Jeepney Terminal bound for Lopez" },
   { name: "Piat Gumaca 📍", lat: 13.918025, lng: 122.100401, type: "Landmark", desc: "Piat Area, Mabini / Poblacion, Gumaca" },
   { name: "Holy Child Jesus Christ ⛪", lat: 13.921889, lng: 122.099639, type: "Heritage", desc: "Holy Child Jesus Christ Church / Chapel, Town Proper, Gumaca" },
-  { name: "578 Emporium 🛍️🏬", lat: 13.921341, lng: 122.103364, type: "Shopping", desc: "Emporium & Shopping Center, Maharlika Highway, Gumaca" },
+  { name: "578 Emporium 📍", lat: 13.921341, lng: 122.103364, type: "Shopping", desc: "Emporium & Shopping Center, Maharlika Highway, Gumaca" },
 ];
 
 // Helper to estimate street name / barangay based on exact Google Maps coordinates in Gumaca
@@ -147,115 +147,6 @@ export default function NeighborhoodMap({
   const [showGrid, setShowGrid] = useState(false);
 
   // Interactive Boundary & Polygon Drawing States
-  const [isDrawingMode, setIsDrawingMode] = useState(false);
-  const [isDrawingPanelMinimized, setIsDrawingPanelMinimized] = useState(false);
-  const [drawShapeType, setDrawShapeType] = useState<"polygon" | "polyline" | "points">("polygon");
-  const [drawColor, setDrawColor] = useState<string>("#2563eb"); // Vivid Blue
-  const [mousePos, setMousePos] = useState<{ lat: number; lng: number } | null>(null);
-  const [drawnPoints, setDrawnPoints] = useState<{ lat: number; lng: number }[]>([]);
-  const DEFAULT_GUMACA_BOUNDARIES = [
-    {
-      id: "b1",
-      barangayName: "Barangay Tabing Dagat",
-      color: "#10b981",
-      points: [[13.9230, 122.0990], [13.9258, 122.0980], [13.9262, 122.1025], [13.9235, 122.1030]] as [number, number][]
-    },
-    {
-      id: "b2",
-      barangayName: "Barangay Villa Nava",
-      color: "#6366f1",
-      points: [[13.9150, 122.0970], [13.9185, 122.0965], [13.9190, 122.1005], [13.9155, 122.1010]] as [number, number][]
-    },
-    {
-      id: "b3",
-      barangayName: "Barangay San Diego",
-      color: "#f59e0b",
-      points: [[13.9210, 122.1030], [13.9240, 122.1035], [13.9235, 122.1070], [13.9205, 122.1065]] as [number, number][]
-    },
-    {
-      id: "b4",
-      barangayName: "Barangay Bagong Buhay",
-      color: "#0ea5e9",
-      points: [[13.9200, 122.0980], [13.9220, 122.0980], [13.9220, 122.1005], [13.9200, 122.1005]] as [number, number][]
-    },
-    {
-      id: "b5",
-      barangayName: "Barangay Rizal",
-      color: "#8b5cf6",
-      points: [[13.9180, 122.0930], [13.9210, 122.0930], [13.9210, 122.0970], [13.9180, 122.0970]] as [number, number][]
-    },
-    {
-      id: "b6",
-      barangayName: "Barangay Rosario",
-      color: "#f43f5e",
-      points: [[13.9150, 122.1020], [13.9180, 122.1020], [13.9180, 122.1060], [13.9150, 122.1060]] as [number, number][]
-    },
-    {
-      id: "b7",
-      barangayName: "Barangay Pipisik",
-      color: "#14b8a6",
-      points: [[13.9215, 122.0990], [13.9235, 122.0990], [13.9235, 122.1020], [13.9215, 122.1020]] as [number, number][]
-    },
-    {
-      id: "b8",
-      barangayName: "Barangay Buensuceso",
-      color: "#f97316",
-      points: [[13.9230, 122.1050], [13.9260, 122.1050], [13.9260, 122.1090], [13.9230, 122.1090]] as [number, number][]
-    },
-    {
-      id: "b9",
-      barangayName: "Barangay Mabini",
-      color: "#84cc16",
-      points: [[13.9170, 122.0950], [13.9200, 122.0950], [13.9200, 122.0980], [13.9170, 122.0980]] as [number, number][]
-    },
-    {
-      id: "b10",
-      barangayName: "Barangay Peñafrancia",
-      color: "#06b6d4",
-      points: [[13.9250, 122.1000], [13.9280, 122.1000], [13.9280, 122.1040], [13.9250, 122.1040]] as [number, number][]
-    },
-    {
-      id: "b11",
-      barangayName: "Barangay Progreso Purok 1",
-      color: "#7c3aed",
-      points: [[13.9130, 122.0940], [13.9160, 122.0940], [13.9160, 122.0980], [13.9130, 122.0980]] as [number, number][]
-    },
-    {
-      id: "b12",
-      barangayName: "Barangay Maunlad",
-      color: "#ec4899",
-      points: [[13.9200, 122.1005], [13.9225, 122.1005], [13.9225, 122.1035], [13.9200, 122.1035]] as [number, number][]
-    }
-  ];
-
-  const [drawnBarangayBoundaries, setDrawnBarangayBoundaries] = useState<{
-    id: string;
-    barangayName: string;
-    color: string;
-    points: [number, number][];
-  }[]>(() => {
-    try {
-      const saved = localStorage.getItem("barangay_drawn_boundaries");
-      if (saved !== null) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {
-      console.error("Failed to parse saved boundaries from localStorage:", e);
-    }
-    return DEFAULT_GUMACA_BOUNDARIES;
-  });
-
-  // Automatically persist saved barangay boundaries to LocalStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("barangay_drawn_boundaries", JSON.stringify(drawnBarangayBoundaries));
-    } catch (e) {
-      console.error("Failed to write saved boundaries to localStorage:", e);
-    }
-  }, [drawnBarangayBoundaries]);
-  const [selectedBarangayToSave, setSelectedBarangayToSave] = useState("Barangay Tabing Dagat");
-  const [selectedBarangayBoundaryFilter, setSelectedBarangayBoundaryFilter] = useState<string>("");
   const [isMobileQuickJumpOpen, setIsMobileQuickJumpOpen] = useState(false);
   const [isPropertyCardDismissed, setIsPropertyCardDismissed] = useState(false);
   const [copySuccessMsg, setCopySuccessMsg] = useState("");
@@ -265,9 +156,7 @@ export default function NeighborhoodMap({
       setIsPropertyCardDismissed(false);
     }
   }, [selectedProperty]);
-  const [showBoundariesOnMap, setShowBoundariesOnMap] = useState(true);
   const [showSchoolsOnMap, setShowSchoolsOnMap] = useState(false);
-  const [showConfirmDeleteAll, setShowConfirmDeleteAll] = useState(false);
 
   const [userExactGps, setUserExactGps] = useState<{ lat: number; lng: number; accuracy: number } | null>(null);
   const [isLocatingUser, setIsLocatingUser] = useState(false);
@@ -282,6 +171,45 @@ export default function NeighborhoodMap({
     title: string;
     desc?: string;
   } | null>(null);
+
+  // Persistent draggable arrow markers — one per quick-jump destination
+  // Key = stable landmark ID, value = current coords + label
+  // Pre-populated so ALL arrows are visible immediately when the map opens
+  const ARROW_STORAGE_KEY = "casafinder_arrow_markers_v1";
+
+  // _v = version — bump this number whenever coordinates are updated in code.
+  // A version mismatch with localStorage means the code has newer coords → use code coords.
+  const DEFAULT_ARROW_MARKERS: Record<string, { lat: number; lng: number; title: string; desc?: string; _v: number }> = {
+    "slsu-villa-nava":   { _v:1, lat: 13.912125, lng: 122.104057, title: "SLSU Villa Nava 🎓",                desc: "Southern Luzon State University - Villa Nava Campus" },
+    "slsu-tabing-dagat": { _v:2, lat: 13.9230,   lng: 122.1014,   title: "SLSU Tabing Dagat Campus 🎓",       desc: "Southern Luzon State University - Tabing Dagat Campus" },
+    "jollibee":          { _v:1, lat: 13.920523, lng: 122.099064, title: "Jollibee Gumaca 🍔🐝",               desc: "Fast Food Restaurant, Maharlika Highway, Gumaca" },
+    "mcdonalds":         { _v:1, lat: 13.920751, lng: 122.100299, title: "McDonald's Gumaca 🍟🍔",             desc: "Fast Food Restaurant, Maharlika Highway, Gumaca" },
+    "chowking":          { _v:1, lat: 13.920489, lng: 122.098769, title: "Chowking Gumaca 🥢🥟",               desc: "Fast Food Restaurant, Maharlika Highway, Gumaca" },
+    "novo":              { _v:1, lat: 13.920196, lng: 122.097666, title: "Novo Department Store 🛍️🏢",         desc: "Department Store & Shopping, Maharlika Highway, Gumaca" },
+    "heritage":          { _v:1, lat: 13.923430, lng: 122.100694, title: "Heritage Site 🏛️",                  desc: "Gumaca Heritage / Historical Landmark, Tabing Dagat" },
+    "eqc":               { _v:1, lat: 13.923315, lng: 122.097557, title: "Eastern Quezon College (EQC) 🏛️",   desc: "College & Educational Institution, Gumaca" },
+    "gnhs":              { _v:2, lat: 13.9182, lng: 122.0956, title: "Gumaca National High School (GNHS) 🏫", desc: "Gumaca NHS, Mabini/Poblacion, Gumaca" },
+    "market":            { _v:1, lat: 13.920509, lng: 122.101597, title: "Gumaca Public Market 🛒🐟",          desc: "Public Market & Commercial Hub, Poblacion" },
+    "puregold":          { _v:1, lat: 13.921103, lng: 122.105650, title: "Puregold Gumaca 🟡🛒",              desc: "Puregold Supermarket, Maharlika Highway / San Diego" },
+    "jeep-terminal":     { _v:1, lat: 13.919680, lng: 122.100656, title: "Jeep Terminal (Macalelon, Unisan, Lopez) 🚐", desc: "Jeepney Terminal for Macalelon, Unisan & Lopez" },
+    "jeep-terminal-lopez": { _v:1, lat: 13.9222, lng: 122.1009, title: "Jeep Terminal (Lopez) 🚐", desc: "Jeepney Terminal bound for Lopez, Gumaca" },
+    "rakk-prophet":      { _v:1, lat: 13.932183, lng: 122.091994, title: "RAKKK Prophet Medical Center 🏥",             desc: "Hospital / Medical Center, Km. 194 Maharlika Highway, Brgy. Rosario, Gumaca" },
+    "district-hospital": { _v:1, lat: 13.933120, lng: 122.089487, title: "Gumaca District Hospital 🏥",                 desc: "Gumaca District Hospital, Maharlika Highway, Brgy. Rosario, Gumaca" },
+    "convention-center": { _v:2, lat: 13.9236, lng: 122.1020, title: "Southern Luzon Convention Center 🏛️",         desc: "Convention & Events Center, Tabing Dagat Area, Gumaca" },
+  };
+
+  const [arrowMarkers, setArrowMarkers] = useState<Record<string, {
+    lat: number;
+    lng: number;
+    title: string;
+    desc?: string;
+    _v?: number;
+  }>>({});
+  // Refs so dragend handlers always see latest coords without stale closure
+  const arrowMarkersRef = useRef<Record<string, L.Marker>>({});
+  const [mapReady, setMapReady] = useState(false);
+  // Ref to latest arrowMarkers so map-init callback can access without stale closure
+  const arrowMarkersStateRef = useRef<Record<string, { lat: number; lng: number; title: string; desc?: string; _v?: number }>>(DEFAULT_ARROW_MARKERS);
 
   const [activeSchoolRouteFilter, setActiveSchoolRouteFilter] = useState<string>("all");
   const [dismissedSchoolId, setDismissedSchoolId] = useState<string | null>(null);
@@ -370,109 +298,8 @@ export default function NeighborhoodMap({
 
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const gridLayerRef = useRef<L.LayerGroup | null>(null);
-  const drawingLayerRef = useRef<L.LayerGroup | null>(null);
   const routeLayerRef = useRef<L.LayerGroup | null>(null);
-  const isDrawingModeRef = useRef(isDrawingMode);
   const pinnedMarkerRef = useRef<L.Marker | null>(null);
-  const lastAddedTimeRef = useRef<number>(0);
-
-  const [pixelPoints, setPixelPoints] = useState<{ x: number; y: number; lat: number; lng: number }[]>([]);
-  const [mousePixel, setMousePixel] = useState<{ x: number; y: number } | null>(null);
-  const [savedPixelBoundaries, setSavedPixelBoundaries] = useState<{
-    id: string;
-    barangayName: string;
-    color: string;
-    points: { x: number; y: number; lat: number; lng: number }[];
-    center: { x: number; y: number };
-  }[]>([]);
-
-  const addPointIfNew = (lat: number, lng: number) => {
-    const now = Date.now();
-    if (now - lastAddedTimeRef.current < 250) return;
-    lastAddedTimeRef.current = now;
-
-    setDrawnPoints(prev => [...prev, { lat, lng }]);
-  };
-
-  const handleUndoPoint = () => {
-    setDrawnPoints(prev => prev.slice(0, -1));
-  };
-
-  const handleClearPoints = () => {
-    setDrawnPoints([]);
-  };
-
-  // Synchronize React DOM SVG & Badge Overlay with Leaflet Map Coordinates
-  useEffect(() => {
-    const updatePixels = () => {
-      const map = leafletMapRef.current;
-      if (!map) return;
-
-      const pxs = drawnPoints.map(p => {
-        const containerPt = map.latLngToContainerPoint([p.lat, p.lng]);
-        return { x: containerPt.x, y: containerPt.y, lat: p.lat, lng: p.lng };
-      });
-      setPixelPoints(pxs);
-
-      if (showBoundariesOnMap && drawnBarangayBoundaries.length > 0) {
-        const filteredBoundaries = (selectedBarangayBoundaryFilter && selectedBarangayBoundaryFilter !== "ALL_BARANGAYS")
-          ? drawnBarangayBoundaries.filter(b => b.barangayName === selectedBarangayBoundaryFilter)
-          : drawnBarangayBoundaries;
-
-        const savedPxs = filteredBoundaries.map(b => {
-          const pts = b.points.map(p => {
-            const containerPt = map.latLngToContainerPoint([p[0], p[1]]);
-            return { x: containerPt.x, y: containerPt.y, lat: p[0], lng: p[1] };
-          });
-          const cLat = b.points.reduce((acc, p) => acc + p[0], 0) / b.points.length;
-          const cLng = b.points.reduce((acc, p) => acc + p[1], 0) / b.points.length;
-          const centerPt = map.latLngToContainerPoint([cLat, cLng]);
-          return {
-            id: b.id,
-            barangayName: b.barangayName,
-            color: b.color || "#6366f1",
-            points: pts,
-            center: { x: centerPt.x, y: centerPt.y }
-          };
-        });
-        setSavedPixelBoundaries(savedPxs);
-      } else {
-        setSavedPixelBoundaries([]);
-      }
-
-      if (mousePos) {
-        const mPt = map.latLngToContainerPoint([mousePos.lat, mousePos.lng]);
-        setMousePixel({ x: mPt.x, y: mPt.y });
-      } else {
-        setMousePixel(null);
-      }
-    };
-
-    const map = leafletMapRef.current;
-    if (map) {
-      map.on("move zoom viewreset resize mousemove", updatePixels);
-      updatePixels();
-    }
-
-    return () => {
-      if (map) {
-        map.off("move zoom viewreset resize mousemove", updatePixels);
-      }
-    };
-  }, [drawnPoints, mousePos, drawnBarangayBoundaries, showBoundariesOnMap, selectedBarangayBoundaryFilter]);
-
-  useEffect(() => {
-    isDrawingModeRef.current = isDrawingMode;
-
-    // Set cursor on map container for visual drawing feedback
-    const map = leafletMapRef.current;
-    if (map) {
-      const container = map.getContainer();
-      if (container) {
-        container.style.cursor = isDrawingMode ? "crosshair" : "";
-      }
-    }
-  }, [isDrawingMode]);
 
   const toggleFullscreen = () => {
     setIsFullscreen(prev => !prev);
@@ -491,11 +318,11 @@ export default function NeighborhoodMap({
     detail: string;
     propertyObj?: Property;
   }> = [
-    { name: "SLSU Villa Nava Campus 🎓🌳", lat: 13.912125, lng: 122.104057, detail: "Brgy. Villa Nava Campus" },
-    { name: "SLSU Tabing Dagat Campus 🎓🌊", lat: 13.923258, lng: 122.101460, detail: "Brgy. Tabing Dagat Campus" },
+    { name: "SLSU Villa Nava 🎓", lat: 13.912125, lng: 122.104057, detail: "Brgy. Villa Nava Campus" },
+    { name: "SLSU Tabing Dagat Campus 🎓", lat: 13.9230, lng: 122.1014, detail: "Brgy. Tabing Dagat Campus" },
     { name: "Eastern Quezon College (EQC) 🏛️", lat: 13.923315, lng: 122.097557, detail: "College, Gumaca" },
-    { name: "Gumaca National High School (GNHS) 🏫", lat: 13.920500, lng: 122.094000, detail: "High School, Mabini/Poblacion" },
-    { name: "Gumaca West & East Central Elementary 🏫", lat: 13.918000, lng: 122.099000, detail: "Elementary School, M.H. Del Pilar St." },
+    { name: "Gumaca National High School (GNHS) 🏫", lat: 13.9182, lng: 122.0956, detail: "High School, Mabini/Poblacion" },
+    { name: "Gumaca West & East Central Elementary ", lat: 13.918000, lng: 122.099000, detail: "Elementary School, M.H. Del Pilar St." },
     { name: "Holy Child Academy 🏫", lat: 13.921500, lng: 122.099500, detail: "High School / Academy, Town Proper" },
     // All 13 Gumaca Barangays with precise GPS Coordinates
     { name: "📍 Barangay Tabing Dagat", lat: 13.923258, lng: 122.101460, detail: "Coastal Quayside, Nava Blvd & SLSU Campus Area" },
@@ -522,14 +349,14 @@ export default function NeighborhoodMap({
     { name: "Gumaca Public Market 🛒🐟", lat: 13.920509, lng: 122.101597, detail: "Public Market & Commercial Hub, Poblacion" },
     { name: "Puregold Gumaca 🟡🛒", lat: 13.921103, lng: 122.105650, detail: "Supermarket & Mall, Maharlika Highway" },
     { name: "Jeep Terminal (Macalelon, Unisan, Lopez) 🚐", lat: 13.919680, lng: 122.100656, detail: "Jeep Terminal (Macalelon, Unisan, Lopez)" },
-    { name: "Jeep Terminal (Lopez) 🚐", lat: 13.922163, lng: 122.100909, detail: "Jeep Terminal bound for Lopez" },
+    { name: "Jeep Terminal (Lopez) 🚐", lat: 13.9222, lng: 122.1009, detail: "Jeep Terminal bound for Lopez" },
     { name: "Piat Gumaca 📍", lat: 13.918025, lng: 122.100401, detail: "Piat Area, Mabini / Poblacion" },
     { name: "Holy Child Jesus Christ ⛪", lat: 13.921889, lng: 122.099639, detail: "Church / Chapel, Town Proper" },
-    { name: "578 Emporium 🛍️🏬", lat: 13.921341, lng: 122.103364, detail: "Shopping Center & Emporium, Maharlika Highway" },
+    { name: "578 Emporium 📍", lat: 13.921341, lng: 122.103364, detail: "Shopping Center & Emporium, Maharlika Highway" },
     ...properties.map(p => {
       const [lat, lng] = getLatLngForProperty(p);
       return {
-        name: `🏠 ${p.title}`,
+        name: ` ${p.title}`,
         lat,
         lng,
         detail: `Dorm / Boarding House - ₱${p.price.toLocaleString()}/mo in ${p.neighborhood}`,
@@ -544,6 +371,25 @@ export default function NeighborhoodMap({
         item.detail.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
+
+  // Inject keyframes for arrow marker animations (ping + bounce)
+  useEffect(() => {
+    const id = "casafinder-arrow-keyframes";
+    if (!document.getElementById(id)) {
+      const style = document.createElement("style");
+      style.id = id;
+      style.textContent = `
+        @keyframes ping {
+          75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(-15%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+          50% { transform: translateY(0); animation-timing-function: cubic-bezier(0,0,0.2,1); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
 
   // Initialize Leaflet Map
   useEffect(() => {
@@ -568,6 +414,10 @@ export default function NeighborhoodMap({
     } as any);
 
     leafletMapRef.current = map;
+    setMapReady(true);
+
+    // Arrows are shown on-demand when user selects a Quick Jump destination
+    // No arrows placed on map init
 
     const container = map.getContainer();
     if (container) {
@@ -598,14 +448,12 @@ export default function NeighborhoodMap({
 
     tileLayerRef.current = layer;
 
-    // Click on map to inspect street, add drawing point, or set school pinpoint
+    // Click on map to inspect street or set school pinpoint
     map.on("click", (e: L.LeafletMouseEvent) => {
       const lat = e.latlng.lat;
       const lng = e.latlng.lng;
 
-      if (isDrawingModeRef.current) {
-        addPointIfNew(lat, lng);
-      } else if (isEntranceEditingModeRef.current) {
+      if (isEntranceEditingModeRef.current) {
         const fixedLat = Number(lat.toFixed(6));
         const fixedLng = Number(lng.toFixed(6));
         setEditingCampusLat(fixedLat);
@@ -639,9 +487,7 @@ export default function NeighborhoodMap({
 
         const latlng = map.mouseEventToLatLng(e);
         if (latlng && latlng.lat && latlng.lng) {
-          if (isDrawingModeRef.current) {
-            addPointIfNew(latlng.lat, latlng.lng);
-          } else if (isEntranceEditingModeRef.current) {
+          if (isEntranceEditingModeRef.current) {
             const fixedLat = Number(latlng.lat.toFixed(6));
             const fixedLng = Number(latlng.lng.toFixed(6));
             setEditingCampusLat(fixedLat);
@@ -657,17 +503,6 @@ export default function NeighborhoodMap({
     container.addEventListener("pointerdown", handlePointerDown);
     container.addEventListener("pointerup", handlePointerUp);
 
-    // Mousemove for real-time live preview line from last point to cursor
-    map.on("mousemove", (e: L.LeafletMouseEvent) => {
-      if (isDrawingModeRef.current) {
-        setMousePos({ lat: e.latlng.lat, lng: e.latlng.lng });
-      }
-    });
-
-    map.on("mouseout", () => {
-      setMousePos(null);
-    });
-
     // Clean up on unmount
     return () => {
       container.removeEventListener("pointerdown", handlePointerDown);
@@ -676,6 +511,8 @@ export default function NeighborhoodMap({
         leafletMapRef.current.remove();
         leafletMapRef.current = null;
       }
+      // Clear stale arrow marker refs so next mount recreates them fresh
+      arrowMarkersRef.current = {};
     };
   }, []);
 
@@ -767,7 +604,7 @@ export default function NeighborhoodMap({
 
         const labelIcon = L.divIcon({
           className: "grid-label-lat",
-          html: `<div class="bg-amber-500/90 text-stone-950 font-mono text-[9px] px-1 font-black rounded shadow-xs select-none opacity-90">${lat.toFixed(3)}°N</div>`,
+          html: `<div class="bg-amber-500/90 text-stone-950 font-mono text-[9px] px-1 font-black rounded shadow-xs select-none opacity-90">${lat.toFixed(3)}N</div>`,
           iconSize: [50, 14],
           iconAnchor: [0, 7]
         });
@@ -786,7 +623,7 @@ export default function NeighborhoodMap({
 
         const labelIcon = L.divIcon({
           className: "grid-label-lng",
-          html: `<div class="bg-amber-500/90 text-stone-950 font-mono text-[9px] px-1 font-black rounded shadow-xs select-none opacity-90">${lng.toFixed(3)}°E</div>`,
+          html: `<div class="bg-amber-500/90 text-stone-950 font-mono text-[9px] px-1 font-black rounded shadow-xs select-none opacity-90">${lng.toFixed(3)}E</div>`,
           iconSize: [55, 14],
           iconAnchor: [27, 0]
         });
@@ -794,342 +631,6 @@ export default function NeighborhoodMap({
       }
     }
   }, [showGrid]);
-
-  // Distance calculation helpers (Haversine formula)
-  const getDistanceInMeters = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371e3;
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  const calculateTotalPerimeter = (pts: { lat: number; lng: number }[], shape: "polygon" | "polyline" | "points") => {
-    if (pts.length < 2) return 0;
-    let dist = 0;
-    for (let i = 0; i < pts.length - 1; i++) {
-      dist += getDistanceInMeters(pts[i].lat, pts[i].lng, pts[i + 1].lat, pts[i + 1].lng);
-    }
-    if (shape === "polygon" && pts.length >= 3) {
-      dist += getDistanceInMeters(pts[pts.length - 1].lat, pts[pts.length - 1].lng, pts[0].lat, pts[0].lng);
-    }
-    return dist;
-  };
-
-  const handleCopyCoordinates = (format: "json" | "csv" | "google") => {
-    if (drawnPoints.length === 0) return;
-    let text = "";
-    if (format === "json") {
-      text = JSON.stringify(drawnPoints.map(p => [Number(p.lat.toFixed(6)), Number(p.lng.toFixed(6))]), null, 2);
-    } else if (format === "csv") {
-      text = drawnPoints.map(p => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`).join("\n");
-    } else if (format === "google") {
-      const waypoints = drawnPoints.map(p => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`).join("/");
-      text = `https://www.google.com/maps/dir/${waypoints}`;
-    }
-
-    navigator.clipboard.writeText(text);
-    setCopySuccessMsg(`📋 Na-kopyang matagumpay ang ${drawnPoints.length} coordinates!`);
-    setTimeout(() => setCopySuccessMsg(""), 3500);
-  };
-
-  const handleSaveBoundary = () => {
-    if (drawnPoints.length < 2) {
-      setCopySuccessMsg("⚠️ Maglagay ng kahit 2 o higit pang tuldok sa mapa para sa boundary!");
-      setTimeout(() => setCopySuccessMsg(""), 3500);
-      return;
-    }
-
-    const newBoundary = {
-      id: `bound-${Date.now()}`,
-      barangayName: selectedBarangayToSave,
-      color: drawColor,
-      points: drawnPoints.map(p => [p.lat, p.lng] as [number, number])
-    };
-
-    setDrawnBarangayBoundaries(prev => {
-      const filtered = prev.filter(b => b.barangayName !== selectedBarangayToSave);
-      const nextState = [...filtered, newBoundary];
-      try {
-        localStorage.setItem("barangay_drawn_boundaries", JSON.stringify(nextState));
-      } catch (e) {
-        console.error("Error saving to localStorage:", e);
-      }
-      return nextState;
-    });
-
-    setShowBoundariesOnMap(true);
-
-    const lats = newBoundary.points.map(p => p[0]);
-    const lngs = newBoundary.points.map(p => p[1]);
-    const cLat = lats.reduce((a, b) => a + b, 0) / lats.length;
-    const cLng = lngs.reduce((a, b) => a + b, 0) / lats.length;
-
-    triggerArrowHighlight(cLat, cLng, `📍 Boundary: ${selectedBarangayToSave}`, `Opisyal na Na-save na Boundary (${newBoundary.points.length} tuldok)`, 16);
-
-    if (leafletMapRef.current && newBoundary.points.length > 0) {
-      const bounds = L.latLngBounds(newBoundary.points);
-      leafletMapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
-    }
-
-    setDrawnPoints([]);
-    setCopySuccessMsg(`🎉 Na-save at na-overlay na sa mapa ang opisyal na boundary ng ${selectedBarangayToSave}! (${newBoundary.points.length} tuldok)`);
-    setTimeout(() => setCopySuccessMsg(""), 3500);
-  };
-
-  const handleDeleteBoundary = (id: string) => {
-    setDrawnBarangayBoundaries(prev => {
-      const nextState = prev.filter(b => b.id !== id);
-      try {
-        localStorage.setItem("barangay_drawn_boundaries", JSON.stringify(nextState));
-      } catch (e) {
-        console.error("Error updating localStorage after delete:", e);
-      }
-      return nextState;
-    });
-    setCopySuccessMsg("🗑️ Na-burang matagumpay ang boundary!");
-    setTimeout(() => setCopySuccessMsg(""), 3000);
-  };
-
-  const handleDeleteAllSavedBoundaries = () => {
-    setDrawnBarangayBoundaries([]);
-    try {
-      localStorage.setItem("barangay_drawn_boundaries", JSON.stringify([]));
-    } catch (e) {
-      console.error(e);
-    }
-    setCopySuccessMsg("🗑️ Na-burang lahat ang mga na-save na boundary!");
-    setTimeout(() => setCopySuccessMsg(""), 3000);
-  };
-
-  const handleRestoreDefaultBoundaries = () => {
-    setDrawnBarangayBoundaries(DEFAULT_GUMACA_BOUNDARIES);
-    try {
-      localStorage.setItem("barangay_drawn_boundaries", JSON.stringify(DEFAULT_GUMACA_BOUNDARIES));
-    } catch (e) {
-      console.error(e);
-    }
-    setCopySuccessMsg("✨ Na-restore ang default 12 Barangay Boundaries ng Gumaca!");
-    setTimeout(() => setCopySuccessMsg(""), 3500);
-  };
-
-  // Drawing Layer Render Effect
-  useEffect(() => {
-    const map = leafletMapRef.current;
-    if (!map) return;
-
-    if (!drawingLayerRef.current) {
-      drawingLayerRef.current = L.layerGroup().addTo(map);
-    } else {
-      drawingLayerRef.current.clearLayers();
-    }
-
-    const layerGroup = drawingLayerRef.current;
-
-    // 1. Render Saved Barangay Boundaries if toggled on
-    if (showBoundariesOnMap) {
-      drawnBarangayBoundaries.forEach((boundary) => {
-        if (boundary.points.length >= 3) {
-          // White high-contrast outline stroke
-          const bgPoly = L.polygon(boundary.points, {
-            color: "#ffffff",
-            weight: 6,
-            opacity: 0.9,
-            fill: false,
-            interactive: false
-          });
-          const poly = L.polygon(boundary.points, {
-            color: boundary.color || "#6366f1",
-            weight: 4,
-            fillColor: boundary.color || "#6366f1",
-            fillOpacity: 0.3,
-            dashArray: "5, 5",
-            interactive: false
-          });
-
-          const lats = boundary.points.map(p => p[0]);
-          const lngs = boundary.points.map(p => p[1]);
-          const cLat = lats.reduce((a, b) => a + b, 0) / lats.length;
-          const cLng = lngs.reduce((a, b) => a + b, 0) / lats.length;
-
-          const labelIcon = L.divIcon({
-            className: "saved-boundary-badge !bg-transparent !border-none",
-            html: `<div class="bg-indigo-950 text-white font-extrabold text-[11px] px-3 py-1 rounded-full shadow-2xl border-2 border-indigo-300 whitespace-nowrap pointer-events-none flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>🏛️ ${boundary.barangayName} (${boundary.points.length} Tuldok)</span>
-            </div>`,
-            iconSize: [160, 26],
-            iconAnchor: [80, 13]
-          });
-
-          poly.bindPopup(`<b>${boundary.barangayName}</b><br/>Total Vertices: ${boundary.points.length}`);
-          layerGroup.addLayer(bgPoly);
-          layerGroup.addLayer(poly);
-          layerGroup.addLayer(L.marker([cLat, cLng], { icon: labelIcon, interactive: false }));
-
-          // Render Leaflet vertex dot markers (tuldok) on each vertex point
-          boundary.points.forEach((pt) => {
-            const dot = L.circleMarker(pt, {
-              radius: 9,
-              color: "#ffffff",
-              weight: 3,
-              fillColor: boundary.color || "#6366f1",
-              fillOpacity: 1,
-              interactive: false
-            });
-            layerGroup.addLayer(dot);
-          });
-        }
-      });
-    }
-
-    // 2. Render Active Drawing Points & Polyline/Polygon
-    if (drawnPoints.length > 0) {
-      const coords: [number, number][] = drawnPoints.map(p => [p.lat, p.lng]);
-
-      // Always draw connected polyline connecting all points with high contrast outline
-      if (coords.length >= 2) {
-        // High contrast white background outline line
-        const bgLine = L.polyline(coords, {
-          color: "#ffffff",
-          weight: 8,
-          opacity: 0.95,
-          interactive: false
-        });
-        // Main colored line
-        const mainLine = L.polyline(coords, {
-          color: drawColor,
-          weight: 5,
-          opacity: 1,
-          interactive: false
-        });
-        layerGroup.addLayer(bgLine);
-        layerGroup.addLayer(mainLine);
-      }
-
-      // Fill polygon area if polygon mode and 3+ points
-      if (drawShapeType === "polygon" && coords.length >= 3) {
-        const poly = L.polygon(coords, {
-          color: drawColor,
-          weight: 5,
-          fillColor: drawColor,
-          fillOpacity: 0.35,
-          interactive: false
-        });
-        layerGroup.addLayer(poly);
-      }
-
-      // Live Rubberband Preview Line from last point to cursor
-      if (isDrawingMode && mousePos) {
-        const lastPt = coords[coords.length - 1];
-        const previewCoords: [number, number][] = [lastPt, [mousePos.lat, mousePos.lng]];
-
-        const previewBg = L.polyline(previewCoords, {
-          color: "#ffffff",
-          weight: 6,
-          dashArray: "6, 6",
-          opacity: 0.9,
-          interactive: false
-        });
-        const previewLine = L.polyline(previewCoords, {
-          color: drawColor,
-          weight: 3.5,
-          dashArray: "6, 6",
-          opacity: 1,
-          interactive: false
-        });
-        layerGroup.addLayer(previewBg);
-        layerGroup.addLayer(previewLine);
-
-        // Preview polygon closing line back to point #1
-        if (drawShapeType === "polygon" && coords.length >= 2) {
-          const closingCoords: [number, number][] = [[mousePos.lat, mousePos.lng], coords[0]];
-          const closingLine = L.polyline(closingCoords, {
-            color: drawColor,
-            weight: 2,
-            dashArray: "4, 4",
-            opacity: 0.6,
-            interactive: false
-          });
-          layerGroup.addLayer(closingLine);
-        }
-
-        // Live cursor target indicator label
-        const targetIcon = L.divIcon({
-          className: "mouse-target-pin !bg-transparent !border-none",
-          html: `
-            <div class="pointer-events-none flex items-center gap-1.5 bg-indigo-950/90 text-white font-mono font-bold text-[10px] px-2.5 py-1 rounded-full shadow-2xl border border-emerald-400 backdrop-blur-xs whitespace-nowrap animate-pulse">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Click para sa Tuldok #${coords.length + 1}</span>
-            </div>
-          `,
-          iconSize: [160, 24],
-          iconAnchor: [80, 28]
-        });
-        layerGroup.addLayer(L.marker([mousePos.lat, mousePos.lng], { icon: targetIcon, interactive: false }));
-      }
-
-      // Vertex Markers with sequence number 1, 2, 3...
-      drawnPoints.forEach((pt, index) => {
-        const isFirst = index === 0;
-        const isLast = index === drawnPoints.length - 1;
-
-        // Guaranteed SVG CircleMarker rendering
-        const dot = L.circleMarker([pt.lat, pt.lng], {
-          radius: 12,
-          color: "#ffffff",
-          weight: 4,
-          fillColor: isFirst ? "#059669" : isLast ? "#e11d48" : "#2563eb",
-          fillOpacity: 1,
-          interactive: false
-        });
-        layerGroup.addLayer(dot);
-
-        // Super High-Contrast Glowing Target Overlay Badge
-        const vertexIcon = L.divIcon({
-          className: "vertex-marker !bg-transparent !border-none",
-          html: `
-            <div class="pointer-events-none relative flex flex-col items-center justify-center">
-              <!-- Outer glowing pulse aura ring -->
-              <span class="absolute w-11 h-11 rounded-full animate-ping opacity-75 ${
-                isFirst ? "bg-emerald-400" : isLast ? "bg-rose-400" : "bg-blue-400"
-              }"></span>
-              
-              <!-- Numbered Core Pin Badge -->
-              <div class="relative flex items-center justify-center w-8 h-8 rounded-full font-black text-[13px] text-white shadow-[0_0_20px_rgba(0,0,0,0.6)] border-2 border-white ${
-                isFirst
-                  ? "bg-emerald-600 ring-4 ring-emerald-300"
-                  : isLast
-                  ? "bg-rose-600 ring-4 ring-rose-300"
-                  : "bg-blue-600 ring-4 ring-blue-300"
-              }">
-                ${index + 1}
-              </div>
-
-              <!-- Top/Bottom Label Pill -->
-              ${
-                isFirst
-                  ? `<div class="absolute -top-6 bg-emerald-900 text-emerald-200 text-[9px] font-extrabold px-1.5 py-0.2 rounded shadow border border-emerald-400 whitespace-nowrap">▶ SIMULA (#1)</div>`
-                  : isLast && drawnPoints.length > 1
-                  ? `<div class="absolute -bottom-6 bg-rose-900 text-rose-200 text-[9px] font-extrabold px-1.5 py-0.2 rounded shadow border border-rose-400 whitespace-nowrap">📌 TULDOK #${index + 1}</div>`
-                  : ""
-              }
-            </div>
-          `,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18]
-        });
-
-        const marker = L.marker([pt.lat, pt.lng], { icon: vertexIcon, interactive: false });
-        layerGroup.addLayer(marker);
-      });
-    }
-  }, [drawnPoints, drawShapeType, drawColor, drawnBarangayBoundaries, showBoundariesOnMap, isDrawingMode, mousePos]);
 
   // Render Interactive Draggable School Pins on Map when editing mode is active
   useEffect(() => {
@@ -1250,37 +751,8 @@ export default function NeighborhoodMap({
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
-    // Quick Jump Arrow Pointer (Rendered whenever triggered by Quick Jump or Search)
-    if (activeArrowLocation) {
-      const campusIcon = L.divIcon({
-        className: "custom-campus-pin",
-        html: `
-          <div class="cursor-pointer group flex flex-col items-center z-50 drop-shadow-xl transition-transform hover:scale-110 active:scale-95">
-            <!-- Floating title label above arrow -->
-            <div class="mb-1 whitespace-nowrap bg-rose-600 text-white font-extrabold text-[10px] px-2.5 py-1 rounded-full shadow-xl border-2 border-white tracking-wide flex items-center gap-1 animate-pulse">
-              <span>${activeArrowLocation.title}</span>
-            </div>
-            <div class="relative flex items-center justify-center">
-              <!-- Pulsing outer ring -->
-              <div class="absolute -inset-3 bg-rose-500/50 rounded-full animate-ping"></div>
-              <!-- Arrow circle badge -->
-              <div class="relative bg-rose-600 text-white p-2.5 rounded-full border-2 border-white shadow-2xl flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 animate-bounce stroke-[3.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                </svg>
-              </div>
-            </div>
-            <!-- Pointer tip pointing to exact coordinate -->
-            <div class="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-rose-600 -mt-1"></div>
-          </div>
-        `,
-        iconSize: [160, 75],
-        iconAnchor: [80, 75]
-      });
-
-      const campusMarker = L.marker([activeArrowLocation.lat, activeArrowLocation.lng], { icon: campusIcon }).addTo(map);
-      markersRef.current.push(campusMarker);
-    }
+    // Quick Jump Arrow Pointers — managed separately in their own useEffect below
+    // (do NOT add/remove arrows here to avoid wiping them on property/school re-renders)
 
     // Add Landmark Markers only if showLandmarks is explicitly toggled on
     if (showLandmarks) {
@@ -1353,7 +825,7 @@ export default function NeighborhoodMap({
         `);
 
         marker.on("click", () => {
-          triggerArrowHighlight(sch.lat, sch.lng, sch.name, sch.desc, 17);
+          triggerArrowHighlight(sch.lat, sch.lng, sch.name, sch.desc, 20);
         });
 
         markersRef.current.push(marker);
@@ -1572,7 +1044,7 @@ export default function NeighborhoodMap({
             html: `
               <div class="pointer-events-none flex items-center justify-center">
                 <div class="bg-blue-950 text-white font-sans text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-2xl border-2 border-blue-400 flex items-center gap-1.5 whitespace-nowrap">
-                  <span class="text-amber-300">📏 ${distObj.distanceKm.toFixed(2)} km</span>
+                  <span class="text-amber-300"> ${distObj.distanceKm.toFixed(2)} km</span>
                   <span class="text-blue-100 font-normal">(${distObj.walkingMinutes}m lakad)</span>
                 </div>
               </div>
@@ -1630,7 +1102,7 @@ export default function NeighborhoodMap({
                       html: `
                         <div class="pointer-events-none flex items-center justify-center">
                           <div class="bg-blue-950 text-white font-sans text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-2xl border-2 border-blue-400 flex items-center gap-1.5 whitespace-nowrap">
-                            <span class="text-amber-300">📏 ${osrmDistKm.toFixed(2)} km</span>
+                            <span class="text-amber-300"> ${osrmDistKm.toFixed(2)} km</span>
                             <span class="text-blue-100 font-normal">(${osrmWalkMins}m lakad)</span>
                           </div>
                         </div>
@@ -1659,27 +1131,142 @@ export default function NeighborhoodMap({
       const [sLat, sLng] = getLatLngForProperty(selectedProperty);
       map.panTo([sLat, sLng], { animate: true });
     }
-  }, [properties, selectedProperty, aiMatches, onSelectProperty, showLandmarks, showSchoolsOnMap, villaNavaCoords, tabingDagatCoords, activeArrowLocation, activeSchoolRouteFilter, selectedSchoolId, schoolRevision]);
+  }, [properties, selectedProperty, aiMatches, onSelectProperty, showLandmarks, showSchoolsOnMap, villaNavaCoords, tabingDagatCoords, activeSchoolRouteFilter, selectedSchoolId, schoolRevision]);
 
-  // Quick pan functions
-  const panToArea = (lat: number, lng: number, zoom: number = 16) => {
+  // Keep ref in sync with state so map-init callback always has latest coords
+  useEffect(() => {
+    arrowMarkersStateRef.current = arrowMarkers;
+  }, [arrowMarkers]);
+
+  // Dedicated useEffect for arrow markers — completely isolated from the main marker useEffect
+  // so that dragging an arrow never causes property/school markers to re-render/disappear
+  useEffect(() => {
+    const map = leafletMapRef.current;
+    if (!map) return;
+
+    const buildArrowIcon = (title: string, isDragging = false) => L.divIcon({
+      className: "",
+      html: `
+        <div style="position:relative;display:flex;flex-direction:column;align-items:center;width:44px;height:44px;cursor:${isDragging ? "grabbing" : "grab"};user-select:none;">
+          <!-- Label floats above, pointer-events none so it never blocks drag -->
+          <div style="position:absolute;bottom:52px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#dc2626;color:#fff;font-weight:800;font-size:10px;padding:3px 10px;border-radius:999px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);pointer-events:none;">
+            ${title}
+          </div>
+          <!-- Ping ring -->
+          ${!isDragging ? `<div style="position:absolute;inset:-8px;background:rgba(239,68,68,0.3);border-radius:50%;animation:ping 1.2s cubic-bezier(0,0,0.2,1) infinite;pointer-events:none;"></div>` : ""}
+          <!-- Circle drag handle -->
+          <div style="width:44px;height:44px;background:#dc2626;border-radius:50%;border:2.5px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
+            <svg xmlns="http://www.w3.org/2000/svg" style="width:22px;height:22px;stroke-width:3.5;${!isDragging ? "animation:bounce 1s infinite;" : ""}" fill="none" viewBox="0 0 24 24" stroke="#fff">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+            </svg>
+          </div>
+        </div>
+      `,
+      iconSize: [44, 44],
+      iconAnchor: [22, 44]
+    });
+
+    Object.entries(arrowMarkers).forEach(([arrowId, arrow]) => {
+      // If marker already exists on map, just move it — don't recreate
+      if (arrowMarkersRef.current[arrowId]) {
+        arrowMarkersRef.current[arrowId].setLatLng([arrow.lat, arrow.lng]);
+        return;
+      }
+
+      const arrowMarker = L.marker([arrow.lat, arrow.lng], {
+        icon: buildArrowIcon(arrow.title),
+        draggable: true,
+        title: arrow.title,
+        zIndexOffset: 1000
+      }).addTo(map);
+
+      arrowMarker.on("click", () => {
+        const { lat, lng } = arrowMarker.getLatLng();
+        if (leafletMapRef.current) {
+          leafletMapRef.current.flyTo([lat, lng], 20, { animate: true, duration: 1.2 });
+        }
+      });
+
+      arrowMarker.on("dragstart", () => {
+        arrowMarker.setIcon(buildArrowIcon(arrow.title, true));
+      });
+
+      arrowMarker.on("drag", () => {
+        arrowMarker.setIcon(buildArrowIcon(arrow.title, true));
+      });
+
+      arrowMarker.on("dragend", () => {
+        const { lat, lng } = arrowMarker.getLatLng();
+        const newLat = Number(lat.toFixed(6));
+        const newLng = Number(lng.toFixed(6));
+        arrowMarker.setIcon(buildArrowIcon(arrow.title, false));
+        // Update state AND auto-save to localStorage
+        setArrowMarkers(prev => {
+          const updated = { ...prev, [arrowId]: { ...prev[arrowId], lat: newLat, lng: newLng, _v: DEFAULT_ARROW_MARKERS[arrowId]?._v ?? 1 } };
+          try {
+            // Save only this arrow's position to localStorage
+            const existing = JSON.parse(localStorage.getItem(ARROW_STORAGE_KEY) || "{}");
+            existing[arrowId] = { lat: newLat, lng: newLng, _v: DEFAULT_ARROW_MARKERS[arrowId]?._v ?? 1 };
+            localStorage.setItem(ARROW_STORAGE_KEY, JSON.stringify(existing));
+          } catch (_) {}
+          return updated;
+        });
+      });
+
+      arrowMarkersRef.current[arrowId] = arrowMarker;
+    });
+
+    // Remove arrows that no longer exist in state
+    Object.keys(arrowMarkersRef.current).forEach(id => {
+      if (!arrowMarkers[id]) {
+        try { arrowMarkersRef.current[id].remove(); } catch (_) {}
+        delete arrowMarkersRef.current[id];
+      }
+    });
+  }, [arrowMarkers, mapReady]);
+
+  const panToArea = (lat: number, lng: number, zoom: number = 20) => {
     if (leafletMapRef.current) {
       leafletMapRef.current.flyTo([lat, lng], zoom, { animate: true, duration: 1.2 });
     }
   };
 
-  const triggerArrowHighlight = (lat: number, lng: number, title: string, desc?: string, zoom: number = 17) => {
+  const triggerArrowHighlight = (lat: number, lng: number, title: string, desc?: string, zoom: number = 17, arrowId?: string) => {
     setActiveArrowLocation({ lat, lng, title, desc });
-    panToArea(lat, lng, zoom);
+    const id = arrowId || title.replace(/[^a-z0-9]/gi, "-").toLowerCase().slice(0, 40);
+
+    // Get saved position for this arrow (user may have dragged it before)
+    const savedCoords = (() => {
+      try {
+        const saved = localStorage.getItem(ARROW_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const defaultVersion = DEFAULT_ARROW_MARKERS[id]?._v ?? 1;
+          const savedVersion = parsed[id]?._v ?? 0;
+          if (parsed[id] && savedVersion >= defaultVersion) {
+            return { lat: parsed[id].lat, lng: parsed[id].lng };
+          }
+        }
+      } catch (_) {}
+      return null;
+    })();
+
+    const finalLat = savedCoords?.lat ?? lat;
+    const finalLng = savedCoords?.lng ?? lng;
+
+    // Show ONLY this arrow — clear all others
+    setArrowMarkers({ [id]: { lat: finalLat, lng: finalLng, title, desc } });
+    panToArea(finalLat, finalLng, zoom);
   };
 
-  const triggerSLSUHighlight = (zoom: number = 17) => {
+  const triggerSLSUHighlight = (zoom: number = 20) => {
     triggerArrowHighlight(
       villaNavaCoords[0],
       villaNavaCoords[1],
-      "🏫 SLSU Villa Nava Campus",
+      "SLSU Villa Nava 🎓",
       "Southern Luzon State University - Villa Nava Campus, Gumaca, Quezon.",
-      zoom
+      zoom,
+      "slsu-villa-nava"
     );
   };
 
@@ -1769,61 +1356,15 @@ export default function NeighborhoodMap({
           <Map className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-stone-700 shrink-0" />
           <div className="min-w-0">
             <h3 className="font-display text-xs sm:text-sm font-bold text-stone-800 flex items-center gap-1.5 truncate">
-              Gumaca, Quezon Interactive Street Map 🗺️
+              Gumaca, Quezon Interactive Street Map
             </h3>
             <p className="text-[10px] text-stone-500 font-light hidden sm:block">
               Mag-search ng kalye, barangay, o campus, o pindutin ang mapa para makita ang detalye!
             </p>
           </div>
         </div>
-
-        {/* Header Right Controls: Layer Switcher, Boundary Drawer Toggle & Fullscreen */}
+        {/* Header Right Controls: Layer Switcher & Fullscreen */}
         <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-xs">
-
-          {/* Interactive Barangay Boundary Drawer Button */}
-          <button
-            onClick={() => {
-              setIsDrawingMode(prev => !prev);
-              if (!showBoundariesOnMap) {
-                setShowBoundariesOnMap(true);
-              }
-            }}
-            className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-extrabold transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-xs active:scale-95 ${
-              isDrawingMode
-                ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white ring-2 ring-pink-300 animate-pulse"
-                : "bg-gradient-to-r from-pink-500 to-blue-600 text-white hover:from-pink-600 hover:to-blue-700 shadow-pink-500/10"
-            }`}
-            title="I-edit o iguhit ang boundary ng bawat barangay sa Gumaca"
-          >
-            <Shapes className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-            <span>{isDrawingMode ? "✏️ Drawing..." : "✏️ Boundary"}</span>
-          </button>
-
-          {/* Toggle Saved Barangay Boundaries Overlay */}
-          <button
-            onClick={() => {
-              if (!showBoundariesOnMap) {
-                if (!selectedBarangayBoundaryFilter && drawnBarangayBoundaries.length > 0) {
-                  setSelectedBarangayBoundaryFilter(drawnBarangayBoundaries[0].barangayName);
-                }
-                setShowBoundariesOnMap(true);
-              } else {
-                setShowBoundariesOnMap(false);
-              }
-            }}
-            className={`px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs ${
-              showBoundariesOnMap
-                ? "bg-gradient-to-r from-pink-100 to-blue-100 text-pink-900 border border-pink-300"
-                : "bg-stone-100 text-stone-500 border border-stone-200 hover:bg-stone-200"
-            }`}
-            title="Ipakita o Itago ang Boundary ng Napiling Barangay"
-          >
-            <span>{showBoundariesOnMap ? "🗺️ Overlay ON" : "🗺️ Overlay OFF"}</span>
-          </button>
-
-
-
-
 
           <div className="flex items-center gap-0.5 bg-stone-200/80 p-0.5 rounded-xl text-[10px] sm:text-[11px] font-medium">
             <button
@@ -1835,7 +1376,7 @@ export default function NeighborhoodMap({
               }`}
               title="Live Google Maps Standard Roadmap"
             >
-              🗺️ Map
+              Map
             </button>
             <button
               onClick={() => setMapMode("satellite")}
@@ -1858,7 +1399,7 @@ export default function NeighborhoodMap({
             title="Point out ang iyong eksaktong kasalukuyang lokasyon gamit ang GPS"
           >
             <Navigation className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-white/20" />
-            <span>{isLocatingUser ? "GPS..." : "GPS 📍"}</span>
+            <span>{isLocatingUser ? "GPS..." : "GPS"}</span>
           </button>
 
           <button
@@ -1923,7 +1464,7 @@ export default function NeighborhoodMap({
                 <div
                   key={idx}
                   onClick={() => {
-                    triggerArrowHighlight(item.lat, item.lng, item.name, item.detail, 17);
+                    triggerArrowHighlight(item.lat, item.lng, item.name, item.detail, 20);
                     setSearchQuery(item.name);
                     setShowSearchResults(false);
 
@@ -1959,157 +1500,129 @@ export default function NeighborhoodMap({
             Quick Jump:
           </span>
 
-          {/* Dynamic Jump to Barangay with Saved Boundary */}
-          <div className="flex items-center gap-1 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-lg shrink-0">
-            <span className="font-bold text-indigo-900 text-[10px] flex items-center gap-1">
-              <Shapes className="h-3 w-3 text-indigo-600" />
-              📍 Barangay:
-            </span>
-            <select
-              value={selectedBarangayBoundaryFilter}
-              onChange={(e) => {
-                const bName = e.target.value;
-                setSelectedBarangayBoundaryFilter(bName);
-                if (!bName) {
-                  setShowBoundariesOnMap(false);
-                  return;
-                }
-                setShowBoundariesOnMap(true);
-
-                if (bName === "ALL_BARANGAYS") {
-                  triggerArrowHighlight(13.9220, 122.0995, "📍 Lahat ng Gumaca Barangays", "Ipinapakita ang lahat ng saved barangay boundaries sa Gumaca", 15);
-                  if (leafletMapRef.current) {
-                    leafletMapRef.current.flyTo([13.9220, 122.0995], 15);
-                  }
-                  return;
-                }
-
-                const boundary = drawnBarangayBoundaries.find(b => b.barangayName === bName);
-                if (boundary && boundary.points.length > 0) {
-                  const lats = boundary.points.map(p => p[0]);
-                  const lngs = boundary.points.map(p => p[1]);
-                  const cLat = lats.reduce((a, b) => a + b, 0) / lats.length;
-                  const cLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
-
-                  triggerArrowHighlight(cLat, cLng, `📍 Boundary: ${boundary.barangayName}`, `Kumpletong Na-guhit na Boundary (${boundary.points.length} tuldok)`, 16);
-                  const info = getStreetInfoForCoordinates(cLat, cLng);
-                  setClickedStreet(info);
-
-                  if (leafletMapRef.current) {
-                    const bounds = L.latLngBounds(boundary.points);
-                    leafletMapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
-                  }
-                }
-              }}
-              className="bg-white text-indigo-950 text-[10px] font-bold py-0.5 px-1.5 rounded border border-indigo-200 focus:outline-none cursor-pointer"
-            >
-              <option value="">-- Piliin ({drawnBarangayBoundaries.length}) --</option>
-              <option value="ALL_BARANGAYS">✨ Lahat ng Barangay ({drawnBarangayBoundaries.length})</option>
-              {drawnBarangayBoundaries.map((b) => (
-                <option key={b.id} value={b.barangayName}>
-                  {b.barangayName} ({b.points.length} tuldok)
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* Quick Jump Buttons for Laptop View when Fullscreen */}
           <button
             onClick={() => triggerSLSUHighlight(17)}
             className="bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
-            <School className="h-3 w-3 text-teal-600" />
-            SLSU Villa Nava 🎓
+            SLSU Villa Nava
           </button>
 
           <button
             onClick={() => {
               const slsu = getGumacaSchools().find(s => s.id === "slsu-main");
-              const slsuLat = slsu?.lat || 13.923258;
-              const slsuLng = slsu?.lng || 122.101460;
-              triggerArrowHighlight(slsuLat, slsuLng, "SLSU Tabing Dagat Campus 🎓🌊", "Southern Luzon State University - Tabing Dagat Campus, Gumaca", 17);
+              const slsuLat = slsu?.lat || 13.9230;
+              const slsuLng = slsu?.lng || 122.1014;
+              triggerArrowHighlight(slsuLat, slsuLng, "SLSU Tabing Dagat Campus 🎓", "Southern Luzon State University - Tabing Dagat Campus, Gumaca", 20, "slsu-tabing-dagat");
             }}
             className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
-            <School className="h-3 w-3 text-emerald-600" />
-            SLSU Tabing Dagat 🎓
+            SLSU Tabing Dagat
           </button>
 
           <button
-            onClick={() => triggerArrowHighlight(13.920523, 122.099064, "Jollibee Gumaca 🍔🐝", "Fast Food Restaurant, Maharlika Highway, Gumaca", 17)}
+            onClick={() => triggerArrowHighlight(13.920523, 122.099064, "Jollibee Gumaca 🍔🐝", "Fast Food Restaurant, Maharlika Highway, Gumaca", 20, "jollibee")}
             className="bg-red-50 hover:bg-red-100 text-red-800 border border-red-200/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
-            🍔 Jollibee
+            Jollibee
           </button>
 
           <button
-            onClick={() => triggerArrowHighlight(13.920751, 122.100299, "McDonald's Gumaca 🍟🍔", "Fast Food Restaurant, Maharlika Highway, Gumaca", 17)}
+            onClick={() => triggerArrowHighlight(13.920751, 122.100299, "McDonald's Gumaca 🍟🍔", "Fast Food Restaurant, Maharlika Highway, Gumaca", 20, "mcdonalds")}
             className="bg-yellow-50 hover:bg-yellow-100 text-yellow-900 border border-yellow-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
-            🍟 McDonald's
+            McDonald's
           </button>
 
           <button
-            onClick={() => triggerArrowHighlight(13.920489, 122.098769, "Chowking Gumaca 🥢🥟", "Fast Food Restaurant, Maharlika Highway, Gumaca", 17)}
+            onClick={() => triggerArrowHighlight(13.920489, 122.098769, "Chowking Gumaca 🥢🥟", "Fast Food Restaurant, Maharlika Highway, Gumaca", 20, "chowking")}
             className="bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
-            🥢 Chowking
+            Chowking
           </button>
 
           <button
-            onClick={() => triggerArrowHighlight(13.920196, 122.097666, "Novo Department Store 🛍️🏢", "Department Store & Shopping, Maharlika Highway, Gumaca", 17)}
+            onClick={() => triggerArrowHighlight(13.920196, 122.097666, "Novo Department Store 🛍️🏢", "Department Store & Shopping, Maharlika Highway, Gumaca", 20, "novo")}
             className="bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
-            🛍️ Novo Dept Store
+            📍 Novo Dept Store
           </button>
 
           <button
-            onClick={() => triggerArrowHighlight(13.923430, 122.100694, "Heritage Site 🏛️", "Gumaca Heritage / Historical Landmark, Tabing Dagat", 17)}
+            onClick={() => triggerArrowHighlight(13.923430, 122.100694, "Heritage Site 🏛️", "Gumaca Heritage / Historical Landmark, Tabing Dagat", 20, "heritage")}
             className="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
             🏛️ Heritage
           </button>
 
           <button
-            onClick={() => triggerArrowHighlight(13.923315, 122.097557, "Eastern Quezon College (EQC) 🏛️", "College & Educational Institution, Gumaca", 17)}
+            onClick={() => triggerArrowHighlight(13.923315, 122.097557, "Eastern Quezon College (EQC) 🏛️", "College & Educational Institution, Gumaca", 20, "eqc")}
             className="bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
-            🏫 EQC
+            🏛️ EQC
           </button>
 
           <button
-            onClick={() => triggerArrowHighlight(13.920500, 122.094000, "Gumaca National High School (GNHS) 🏫", "Gumaca NHS, Mabini/Poblacion, Gumaca", 17)}
+            onClick={() => triggerArrowHighlight(13.9182, 122.0956, "Gumaca National High School (GNHS) 🏫", "Gumaca NHS, Mabini/Poblacion, Gumaca", 20, "gnhs")}
             className="bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
             🏫 Gumaca NHS
           </button>
 
           <button
-            onClick={() => triggerArrowHighlight(13.920509, 122.101597, "Gumaca Public Market 🛒🐟", "Public Market & Commercial Hub, Poblacion", 17)}
+            onClick={() => triggerArrowHighlight(13.920509, 122.101597, "Gumaca Public Market 🛒🐟", "Public Market & Commercial Hub, Poblacion", 20, "market")}
             className="bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
-            🛒 Public Market
+            Public Market
           </button>
 
           <button
-            onClick={() => triggerArrowHighlight(13.921103, 122.105650, "Puregold Gumaca 🟡🛒", "Puregold Supermarket, Maharlika Highway / San Diego", 17)}
+            onClick={() => triggerArrowHighlight(13.921103, 122.105650, "Puregold Gumaca 🟡🛒", "Puregold Supermarket, Maharlika Highway / San Diego", 20, "puregold")}
             className="bg-yellow-50 hover:bg-yellow-100 text-yellow-900 border border-yellow-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
-            🟡 Puregold
+            Puregold
           </button>
 
           <button
-            onClick={() => triggerArrowHighlight(13.919680, 122.100656, "Jeep Terminal (Macalelon, Unisan, Lopez) 🚐", "Jeepney Terminal for Macalelon, Unisan & Lopez", 17)}
+            onClick={() => triggerArrowHighlight(13.919680, 122.100656, "Jeep Terminal (Macalelon, Unisan, Lopez) 🚐", "Jeepney Terminal for Macalelon, Unisan & Lopez", 20, "jeep-terminal")}
             className="bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
           >
             🚐 Jeep Terminal
           </button>
 
           <button
+            onClick={() => triggerArrowHighlight(13.9222, 122.1009, "Jeep Terminal (Lopez) 🚐", "Jeepney Terminal bound for Lopez, Gumaca", 20, "jeep-terminal-lopez")}
+            className="bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
+          >
+            🚐 Jeep Terminal (Lopez)
+          </button>
+
+          <button
+            onClick={() => triggerArrowHighlight(13.932183, 122.091994, "RAKKK Prophet Medical Center 🏥", "Hospital / Medical Center, Km. 194 Maharlika Highway, Brgy. Rosario, Gumaca", 20, "rakk-prophet")}
+            className="bg-red-50 hover:bg-red-100 text-red-900 border border-red-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
+          >
+            🏥 RAKKK Medical
+          </button>
+
+          <button
+            onClick={() => triggerArrowHighlight(13.933120, 122.089487, "Gumaca District Hospital 🏥", "Gumaca District Hospital, Maharlika Highway, Brgy. Rosario, Gumaca", 20, "district-hospital")}
+            className="bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
+          >
+            🏥 District Hospital
+          </button>
+
+          <button
+            onClick={() => triggerArrowHighlight(13.9236, 122.1020, "Southern Luzon Convention Center 🏛️", "Convention & Events Center, Tabing Dagat Area, Gumaca", 20, "convention-center")}
+            className="bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300/80 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer flex items-center gap-1"
+          >
+            🏛️ Convention Center
+          </button>
+
+          <button
             onClick={() => triggerArrowHighlight(13.9220, 122.0995, "Whole Gumaca Overview 🔍", "Gumaca Municipality Overview", 14)}
             className="bg-stone-200 hover:bg-stone-300 text-stone-800 px-2.5 py-1 rounded-lg font-bold shrink-0 transition-colors cursor-pointer ml-auto"
           >
-            🔍 Whole Gumaca
+            Whole Gumaca
           </button>
         </div>
       )}
@@ -2129,7 +1642,7 @@ export default function NeighborhoodMap({
                     <Map className="h-3.5 w-3.5" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="font-extrabold text-xs tracking-wide text-white truncate">Gumaca Map 🗺️</span>
+                    <span className="font-extrabold text-xs tracking-wide text-white truncate">Gumaca Map</span>
                     <span className="text-[9px] text-emerald-300/90 font-medium truncate">Interactive Local Guide</span>
                   </div>
                 </div>
@@ -2150,7 +1663,7 @@ export default function NeighborhoodMap({
                       mapMode === "satellite" ? "bg-emerald-500 text-stone-950 shadow-xs" : "text-stone-300 hover:text-white"
                     }`}
                   >
-                    Sat 🛰️
+                    Sat
                   </button>
                 </div>
               </div>
@@ -2184,62 +1697,9 @@ export default function NeighborhoodMap({
                         </button>
                       </div>
 
-                      {/* Barangay Filter Dropdown */}
-                      <div className="flex items-center justify-between gap-2 bg-stone-800/90 border border-stone-700 px-2 py-1 rounded-xl">
-                        <span className="font-bold text-indigo-300 text-[10px] shrink-0">📍 Brgy:</span>
-                        <select
-                          value={selectedBarangayBoundaryFilter}
-                          onChange={(e) => {
-                            const bName = e.target.value;
-                            setSelectedBarangayBoundaryFilter(bName);
-                            if (!bName) {
-                              setShowBoundariesOnMap(false);
-                              return;
-                            }
-                            setShowBoundariesOnMap(true);
-
-                            if (bName === "ALL_BARANGAYS") {
-                              triggerArrowHighlight(13.9220, 122.0995, "📍 Lahat ng Gumaca Barangays", "Ipinapakita ang lahat ng saved barangay boundaries sa Gumaca", 15);
-                              if (leafletMapRef.current) {
-                                leafletMapRef.current.flyTo([13.9220, 122.0995], 15);
-                              }
-                              setIsMobileQuickJumpOpen(false);
-                              return;
-                            }
-
-                            const boundary = drawnBarangayBoundaries.find(b => b.barangayName === bName);
-                            if (boundary && boundary.points.length > 0) {
-                              const lats = boundary.points.map(p => p[0]);
-                              const lngs = boundary.points.map(p => p[1]);
-                              const cLat = lats.reduce((a, b) => a + b, 0) / lats.length;
-                              const cLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
-
-                              triggerArrowHighlight(cLat, cLng, `📍 Boundary: ${boundary.barangayName}`, `Kumpletong Na-guhit na Boundary (${boundary.points.length} tuldok)`, 16);
-                              const info = getStreetInfoForCoordinates(cLat, cLng);
-                              setClickedStreet(info);
-
-                              if (leafletMapRef.current) {
-                                const bounds = L.latLngBounds(boundary.points);
-                                leafletMapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
-                              }
-                            }
-                            setIsMobileQuickJumpOpen(false);
-                          }}
-                          className="bg-stone-900 text-white text-[10px] font-bold py-0.5 px-1 rounded-lg border border-stone-700 focus:outline-none cursor-pointer min-w-0 flex-1"
-                        >
-                          <option value="">-- Piliin ang Barangay --</option>
-                          <option value="ALL_BARANGAYS">✨ Lahat ng Barangay</option>
-                          {drawnBarangayBoundaries.map((b) => (
-                            <option key={b.id} value={b.barangayName}>
-                              {b.barangayName}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
                       {/* Landmark Quick Jump Option Field Dropdown */}
                       <div className="flex items-center justify-between gap-2 bg-stone-800/90 border border-stone-700 px-2 py-1 rounded-xl">
-                        <span className="font-bold text-amber-300 text-[10px] shrink-0">🏢 Lugar:</span>
+                        <span className="font-bold text-amber-300 text-[10px] shrink-0"> Lugar:</span>
                         <select
                           onChange={(e) => {
                             const val = e.target.value;
@@ -2247,18 +1707,22 @@ export default function NeighborhoodMap({
                             if (val === "slsu_villas") triggerSLSUHighlight(17);
                             else if (val === "slsu_main") {
                               const slsu = getGumacaSchools().find(s => s.id === "slsu-main");
-                              triggerArrowHighlight(slsu?.lat || 13.923258, slsu?.lng || 122.101460, "SLSU Tabing Dagat Campus 🎓🌊", "Southern Luzon State University - Tabing Dagat Campus, Gumaca", 17);
+                              triggerArrowHighlight(slsu?.lat || 13.9230, slsu?.lng || 122.1014, "SLSU Tabing Dagat Campus 🎓", "Southern Luzon State University - Tabing Dagat Campus, Gumaca", 20, "slsu-tabing-dagat");
                             }
-                            else if (val === "jollibee") triggerArrowHighlight(13.920523, 122.099064, "Jollibee Gumaca 🍔🐝", "Fast Food Restaurant, Maharlika Highway, Gumaca", 17);
-                            else if (val === "mcdonalds") triggerArrowHighlight(13.920751, 122.100299, "McDonald's Gumaca 🍟🍔", "Fast Food Restaurant, Maharlika Highway, Gumaca", 17);
-                            else if (val === "chowking") triggerArrowHighlight(13.920489, 122.098769, "Chowking Gumaca 🥢🥟", "Fast Food Restaurant, Maharlika Highway, Gumaca", 17);
-                            else if (val === "novo") triggerArrowHighlight(13.920196, 122.097666, "Novo Department Store 🛍️🏢", "Department Store & Shopping, Maharlika Highway, Gumaca", 17);
-                            else if (val === "market") triggerArrowHighlight(13.920509, 122.101597, "Gumaca Public Market 🛒🐟", "Public Market & Commercial Hub, Poblacion", 17);
-                            else if (val === "puregold") triggerArrowHighlight(13.921103, 122.105650, "Puregold Gumaca 🟡🛒", "Puregold Supermarket, Maharlika Highway / San Diego", 17);
-                            else if (val === "jeep_terminal") triggerArrowHighlight(13.919680, 122.100656, "Jeep Terminal (Macalelon, Unisan, Lopez) 🚐", "Jeepney Terminal for Macalelon, Unisan & Lopez", 17);
-                            else if (val === "heritage") triggerArrowHighlight(13.923430, 122.100694, "Heritage Site 🏛️", "Gumaca Heritage / Historical Landmark, Tabing Dagat", 17);
-                            else if (val === "eqc") triggerArrowHighlight(13.923315, 122.097557, "Eastern Quezon College (EQC) 🏛️", "College & Educational Institution, Gumaca", 17);
-                            else if (val === "gnhs") triggerArrowHighlight(13.920500, 122.094000, "Gumaca National High School (GNHS) 🏫", "Gumaca NHS, Mabini/Poblacion, Gumaca", 17);
+                            else if (val === "jollibee") triggerArrowHighlight(13.920523, 122.099064, "Jollibee Gumaca 🍔🐝", "Fast Food Restaurant, Maharlika Highway, Gumaca", 20, "jollibee");
+                            else if (val === "mcdonalds") triggerArrowHighlight(13.920751, 122.100299, "McDonald's Gumaca 🍟🍔", "Fast Food Restaurant, Maharlika Highway, Gumaca", 20, "mcdonalds");
+                            else if (val === "chowking") triggerArrowHighlight(13.920489, 122.098769, "Chowking Gumaca 🥢🥟", "Fast Food Restaurant, Maharlika Highway, Gumaca", 20, "chowking");
+                            else if (val === "novo") triggerArrowHighlight(13.920196, 122.097666, "Novo Department Store 🛍️🏢", "Department Store & Shopping, Maharlika Highway, Gumaca", 20, "novo");
+                            else if (val === "market") triggerArrowHighlight(13.920509, 122.101597, "Gumaca Public Market 🛒🐟", "Public Market & Commercial Hub, Poblacion", 20, "market");
+                            else if (val === "puregold") triggerArrowHighlight(13.921103, 122.105650, "Puregold Gumaca 🟡🛒", "Puregold Supermarket, Maharlika Highway / San Diego", 20, "puregold");
+                            else if (val === "jeep_terminal") triggerArrowHighlight(13.919680, 122.100656, "Jeep Terminal (Macalelon, Unisan, Lopez) 🚐", "Jeepney Terminal for Macalelon, Unisan & Lopez", 20, "jeep-terminal");
+                            else if (val === "jeep_terminal_lopez") triggerArrowHighlight(13.9222, 122.1009, "Jeep Terminal (Lopez) 🚐", "Jeepney Terminal bound for Lopez, Gumaca", 20, "jeep-terminal-lopez");
+                            else if (val === "heritage") triggerArrowHighlight(13.923430, 122.100694, "Heritage Site 🏛️", "Gumaca Heritage / Historical Landmark, Tabing Dagat", 20, "heritage");
+                            else if (val === "eqc") triggerArrowHighlight(13.923315, 122.097557, "Eastern Quezon College (EQC) 🏛️", "College & Educational Institution, Gumaca", 20, "eqc");
+                            else if (val === "gnhs") triggerArrowHighlight(13.9182, 122.0956, "Gumaca National High School (GNHS) 🏫", "Gumaca NHS, Mabini/Poblacion, Gumaca", 20, "gnhs");
+                            else if (val === "rakk_prophet") triggerArrowHighlight(13.932183, 122.091994, "RAKKK Prophet Medical Center 🏥", "Hospital / Medical Center, Km. 194 Maharlika Highway, Brgy. Rosario, Gumaca", 20, "rakk-prophet");
+                            else if (val === "district_hospital") triggerArrowHighlight(13.933120, 122.089487, "Gumaca District Hospital 🏥", "Gumaca District Hospital, Maharlika Highway, Brgy. Rosario, Gumaca", 20, "district-hospital");
+                            else if (val === "convention_center") triggerArrowHighlight(13.9236, 122.1020, "Southern Luzon Convention Center 🏛️", "Convention & Events Center, Tabing Dagat Area, Gumaca", 20, "convention-center");
                             else if (val === "whole_gumaca") triggerArrowHighlight(13.9220, 122.0995, "Whole Gumaca Overview 🔍", "Gumaca Municipality Overview", 14);
                             e.target.value = "";
                             setIsMobileQuickJumpOpen(false);
@@ -2269,17 +1733,25 @@ export default function NeighborhoodMap({
                           <option value="">-- Piliin ang Lugar --</option>
                           <option value="slsu_villas">🎓 SLSU Villa Nava</option>
                           <option value="slsu_main">🎓 SLSU Tabing Dagat</option>
-                          <option value="jollibee">🍔 Jollibee</option>
-                          <option value="mcdonalds">🍟 McDonald's</option>
+                          <option value="jollibee">
+            Jollibee
+          </option>
+                          <option value="mcdonalds">
+            McDonald's
+          </option>
                           <option value="chowking">🥢 Chowking</option>
-                          <option value="novo">🛍️ Novo Store</option>
+                          <option value="novo">📍 Novo Store</option>
                           <option value="market">🛒 Public Market</option>
                           <option value="puregold">🟡 Puregold</option>
-                          <option value="jeep_terminal">🚐 Jeep Terminal</option>
-                          <option value="heritage">🏛️ Heritage Site</option>
-                          <option value="eqc">🏫 EQC</option>
-                          <option value="gnhs">🏫 GNHS</option>
-                          <option value="whole_gumaca">🔍 Buong Gumaca</option>
+                          <option value="jeep_terminal"> Jeep Terminal</option>
+                          <option value="jeep_terminal_lopez"> Jeep Terminal (Lopez)</option>
+                          <option value="heritage"> Heritage Site</option>
+                          <option value="eqc"> EQC</option>
+                          <option value="gnhs"> GNHS</option>
+                          <option value="rakk_prophet"> RAKKK Prophet Medical</option>
+                          <option value="district_hospital"> District Hospital</option>
+                          <option value="convention_center"> Convention Center</option>
+                          <option value="whole_gumaca">📍 Buong Gumaca</option>
                         </select>
                       </div>
                     </div>
@@ -2297,7 +1769,7 @@ export default function NeighborhoodMap({
                 title="Eksaktong Lokasyon sa GPS"
               >
                 <Navigation className="h-4 w-4 fill-white/30 animate-pulse" />
-                <span>{isLocatingUser ? "Naghahanap..." : "GPS 📍"}</span>
+                <span>{isLocatingUser ? "Naghahanap..." : "GPS"}</span>
               </button>
             </div>
 
@@ -2311,198 +1783,6 @@ export default function NeighborhoodMap({
                 <Minimize2 className="h-4 w-4 shrink-0" />
                 <span>Exit Fullscreen ✕</span>
               </button>
-            </div>
-          </>
-        )}
-
-
-
-        {/* ABSOLUTE GUARANTEED REACT DOM SVG & BADGE OVERLAY FOR SAVED BOUNDARIES */}
-        {showBoundariesOnMap && savedPixelBoundaries.length > 0 && (
-          <>
-            <svg className="absolute inset-0 w-full h-full pointer-events-none z-18">
-              {savedPixelBoundaries.map((b) => (
-                <g key={`saved-svg-${b.id}`}>
-                  {b.points.length >= 3 && (
-                    <polygon
-                      points={b.points.map(p => `${p.x},${p.y}`).join(" ")}
-                      fill={b.color}
-                      fillOpacity="0.25"
-                      stroke="#ffffff"
-                      strokeWidth="3.5"
-                      strokeDasharray="6,6"
-                    />
-                  )}
-                  {b.points.length >= 2 && (
-                    <polyline
-                      points={[...b.points, b.points[0]].map(p => `${p.x},${p.y}`).join(" ")}
-                      fill="none"
-                      stroke={b.color}
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
-                </g>
-              ))}
-            </svg>
-
-            {/* DOM HTML Badges & Dots for Saved Barangay Boundaries */}
-            <div className="absolute inset-0 pointer-events-none z-22 overflow-hidden">
-              {savedPixelBoundaries.map((b) => (
-                <React.Fragment key={`saved-dom-${b.id}`}>
-                  {/* Vertex Dots for every saved point */}
-                  {b.points.map((pt, pIdx) => (
-                    <div
-                      key={`saved-pt-${b.id}-${pIdx}`}
-                      style={{ left: `${pt.x}px`, top: `${pt.y}px`, transform: "translate(-50%, -50%)" }}
-                      className="absolute pointer-events-none flex flex-col items-center justify-center"
-                    >
-                      <span className="w-4 h-4 rounded-full bg-white border-2 border-indigo-600 shadow-md ring-2 ring-indigo-300" />
-                      <span className="text-[9px] font-black text-white bg-indigo-950/90 px-1 py-0.2 rounded border border-indigo-300 shadow mt-0.5 whitespace-nowrap">
-                        #{pIdx + 1}
-                      </span>
-                    </div>
-                  ))}
-
-                  {/* Barangay Name Center Badge */}
-                  <div
-                    style={{ left: `${b.center.x}px`, top: `${b.center.y}px`, transform: "translate(-50%, -50%)" }}
-                    className="absolute pointer-events-none bg-indigo-950/95 text-white font-extrabold text-[11px] px-3 py-1 rounded-full shadow-2xl border-2 border-indigo-300 flex items-center gap-1.5 whitespace-nowrap"
-                  >
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>🏛️ {b.barangayName} ({b.points.length} Tuldok)</span>
-                  </div>
-                </React.Fragment>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* ABSOLUTE GUARANTEED REACT DOM SVG & BADGE OVERLAY FOR DRAWN POINTS & LINES */}
-        {(drawnPoints.length > 0 || (isDrawingMode && mousePixel)) && (
-          <>
-            {/* SVG Lines & Polygon Canvas Overlay */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none z-20">
-              {/* Polygon fill if >= 3 points */}
-              {drawShapeType === "polygon" && pixelPoints.length >= 3 && (
-                <polygon
-                  points={pixelPoints.map(p => `${p.x},${p.y}`).join(" ")}
-                  fill={drawColor}
-                  fillOpacity="0.3"
-                  stroke="#ffffff"
-                  strokeWidth="2"
-                />
-              )}
-
-              {/* White High-Contrast Outline Polyline */}
-              {pixelPoints.length >= 2 && (
-                <polyline
-                  points={pixelPoints.map(p => `${p.x},${p.y}`).join(" ")}
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity="0.95"
-                />
-              )}
-
-              {/* Main Vivid Colored Polyline */}
-              {pixelPoints.length >= 2 && (
-                <polyline
-                  points={pixelPoints.map(p => `${p.x},${p.y}`).join(" ")}
-                  fill="none"
-                  stroke={drawColor}
-                  strokeWidth="4.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              )}
-
-              {/* Live Rubberband Line to Cursor */}
-              {isDrawingMode && mousePixel && pixelPoints.length > 0 && (
-                <>
-                  <line
-                    x1={pixelPoints[pixelPoints.length - 1].x}
-                    y1={pixelPoints[pixelPoints.length - 1].y}
-                    x2={mousePixel.x}
-                    y2={mousePixel.y}
-                    stroke="#ffffff"
-                    strokeWidth="6"
-                    strokeDasharray="6,6"
-                  />
-                  <line
-                    x1={pixelPoints[pixelPoints.length - 1].x}
-                    y1={pixelPoints[pixelPoints.length - 1].y}
-                    x2={mousePixel.x}
-                    y2={mousePixel.y}
-                    stroke={drawColor}
-                    strokeWidth="3.5"
-                    strokeDasharray="6,6"
-                  />
-                  {drawShapeType === "polygon" && pixelPoints.length >= 2 && (
-                    <line
-                      x1={mousePixel.x}
-                      y1={mousePixel.y}
-                      x2={pixelPoints[0].x}
-                      y2={pixelPoints[0].y}
-                      stroke={drawColor}
-                      strokeWidth="2"
-                      strokeDasharray="4,4"
-                      opacity="0.6"
-                    />
-                  )}
-                </>
-              )}
-            </svg>
-
-            {/* DOM HTML Badges for Every Single Point */}
-            <div className="absolute inset-0 pointer-events-none z-25 overflow-hidden">
-              {pixelPoints.map((pt, idx) => {
-                const isFirst = idx === 0;
-                const isLast = idx === pixelPoints.length - 1;
-                return (
-                  <div
-                    key={`overlay-pin-${idx}-${pt.lat.toFixed(6)}-${pt.lng.toFixed(6)}`}
-                    style={{ left: `${pt.x}px`, top: `${pt.y}px`, transform: "translate(-50%, -50%)" }}
-                    className="absolute pointer-events-none flex flex-col items-center justify-center"
-                  >
-                    {/* Glowing outer aura ring */}
-                    <span
-                      className={`absolute w-12 h-12 rounded-full animate-ping opacity-80 ${
-                        isFirst ? "bg-emerald-400" : isLast ? "bg-rose-500" : "bg-blue-500"
-                      }`}
-                    />
-
-                    {/* Main Solid High-Contrast Number Circle Badge */}
-                    <div
-                      className={`relative flex items-center justify-center w-8 h-8 rounded-full font-black text-[13px] text-white shadow-[0_0_20px_rgba(0,0,0,0.8)] border-2 border-white ${
-                        isFirst
-                          ? "bg-emerald-600 ring-4 ring-emerald-300"
-                          : isLast
-                          ? "bg-rose-600 ring-4 ring-rose-300"
-                          : "bg-blue-600 ring-4 ring-blue-300"
-                      }`}
-                    >
-                      {idx + 1}
-                    </div>
-
-                    {/* Tag Label */}
-                    <div className="absolute -top-6 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold text-white shadow-2xl border ${
-                        isFirst
-                          ? "bg-emerald-950 border-emerald-400 text-emerald-200"
-                          : isLast
-                          ? "bg-rose-950 border-rose-400 text-rose-200"
-                          : "bg-blue-950 border-blue-400 text-blue-200"
-                      }`}>
-                        {isFirst ? "▶ SIMULA (#1)" : isLast ? `📌 TULDOK #${idx + 1}` : `#${idx + 1}`}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           </>
         )}
@@ -2533,6 +1813,23 @@ export default function NeighborhoodMap({
               </p>
 
               <div className="pt-1 sm:pt-2 mt-1 sm:mt-2 border-t border-stone-800 space-y-1 sm:space-y-1.5 text-[9px] sm:text-[11px] font-mono">
+                {/* Coordinates — prominent and copyable */}
+                <div className="bg-amber-950/60 border border-amber-700/60 px-2 py-1.5 rounded-lg flex items-center justify-between gap-2">
+                  <span className="font-mono font-bold text-amber-300 text-[10px] sm:text-xs tracking-wide select-all">
+                    {clickedStreet.lat}, {clickedStreet.lng}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${clickedStreet.lat}, ${clickedStreet.lng}`);
+                      setCopySuccessMsg("📋 Coordinates copied!");
+                      setTimeout(() => setCopySuccessMsg(""), 2500);
+                    }}
+                    className="shrink-0 bg-amber-600 hover:bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                    title="Copy coordinates"
+                  >
+                    {copySuccessMsg === "📋 Coordinates copied!" ? "✓" : "Copy"}
+                  </button>
+                </div>
                 <div className="bg-stone-800/80 px-1.5 py-1 sm:p-2 rounded-lg sm:rounded-xl border border-stone-700/60 flex items-center justify-between">
                   <span className="text-stone-400 text-[8px] sm:text-[10px]">Villa Nava:</span>
                   <span className="font-bold text-teal-400 text-[9px] sm:text-xs">
@@ -2580,7 +1877,7 @@ export default function NeighborhoodMap({
                     }`}
                     title="I-toggle ang visibility ng school pins sa mapa"
                   >
-                    <span>{showSchoolsOnMap ? "👁️ Pins: ON" : "🙈 Pins: OFF"}</span>
+                    <span>{showSchoolsOnMap ? " Pins: ON" : "🙈 Pins: OFF"}</span>
                   </button>
 
                   <button
@@ -2604,7 +1901,7 @@ export default function NeighborhoodMap({
                       : "text-stone-300 hover:text-white hover:bg-stone-700/50"
                   }`}
                 >
-                  <span>✏️ Edit & Drag School Pin</span>
+                  <span> Edit & Drag School Pin</span>
                 </button>
                 <button
                   type="button"
@@ -2653,7 +1950,7 @@ export default function NeighborhoodMap({
                     >
                       {getGumacaSchools().map((sch) => (
                         <option key={sch.id} value={sch.id}>
-                          🎓 {sch.shortName || sch.name} {sch.isCustom ? "⭐ (Custom)" : ""}
+                          🎓 {sch.shortName || sch.name} {sch.isCustom ? " (Custom)" : ""}
                         </option>
                       ))}
                     </select>
@@ -2719,7 +2016,7 @@ export default function NeighborhoodMap({
                           }}
                           className="text-[10px] text-indigo-300 hover:text-indigo-200 underline font-semibold cursor-pointer"
                         >
-                          🔍 Zoom
+                          📍 Zoom
                         </button>
                       </div>
                     </div>
@@ -2912,7 +2209,7 @@ export default function NeighborhoodMap({
                     type="button"
                     onClick={() => {
                       if (!newSchoolName.trim()) {
-                        setEntranceSaveToast("⚠️ Mangyaring maglagay ng Pangalan ng Paaralan.");
+                        setEntranceSaveToast("⚠ Mangyaring maglagay ng Pangalan ng Paaralan.");
                         setTimeout(() => setEntranceSaveToast(null), 3000);
                         return;
                       }
@@ -2986,341 +2283,6 @@ export default function NeighborhoodMap({
           </div>
         )}
 
-        {/* Interactive Barangay Boundary Drawer & Editor Floating Panel */}
-        {isDrawingMode && (
-          <div className="fixed sm:absolute bottom-2 sm:bottom-auto sm:top-3 left-2 right-2 sm:left-auto sm:right-3 z-30 bg-stone-900/95 backdrop-blur-md text-white p-3 sm:p-4 rounded-2xl border border-stone-700 shadow-2xl max-w-sm w-auto font-sans animate-fade-in max-h-[70vh] sm:max-h-[85vh] overflow-y-auto divide-y divide-stone-800 space-y-3">
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between pb-1 gap-2">
-              <div className="min-w-0">
-                <h4 className="font-display text-xs sm:text-sm font-bold text-amber-400 flex items-center gap-1.5 truncate">
-                  <Shapes className="h-4 w-4 text-amber-400 shrink-0" />
-                  <span>✏️ Boundary Drawer ({drawnPoints.length} pts)</span>
-                </h4>
-                {!isDrawingPanelMinimized && (
-                  <p className="text-[10px] text-stone-300 mt-0.5 hidden xs:block">
-                    Pindutin ang mapa para maglagay ng tuldok ng boundary!
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsDrawingPanelMinimized(prev => !prev)}
-                  className="text-stone-300 hover:text-white text-[10px] font-bold px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 transition-colors cursor-pointer"
-                >
-                  {isDrawingPanelMinimized ? "Expand ▲" : "Minimize ▼"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsDrawingMode(false)}
-                  className="text-stone-400 hover:text-white text-xs font-bold px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 transition-colors cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {!isDrawingPanelMinimized && (
-              <>
-                {/* Shape & Color Settings */}
-                <div className="pt-3 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-stone-400 font-semibold">Uri ng Boundary:</span>
-                    <div className="flex items-center gap-1 bg-stone-800 p-0.5 rounded-xl text-[10px]">
-                      <button
-                        onClick={() => setDrawShapeType("polygon")}
-                        className={`px-2 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                          drawShapeType === "polygon" ? "bg-amber-500 text-stone-950" : "text-stone-300"
-                        }`}
-                      >
-                        🔷 Polygon
-                      </button>
-                      <button
-                        onClick={() => setDrawShapeType("polyline")}
-                        className={`px-2 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                          drawShapeType === "polyline" ? "bg-amber-500 text-stone-950" : "text-stone-300"
-                        }`}
-                      >
-                        〰️ Polyline
-                      </button>
-                      <button
-                        onClick={() => setDrawShapeType("points")}
-                        className={`px-2 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                          drawShapeType === "points" ? "bg-amber-500 text-stone-950" : "text-stone-300"
-                        }`}
-                      >
-                        📍 Points
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Color Selector */}
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-stone-400 font-semibold">Kulay ng Boundary:</span>
-                    <div className="flex items-center gap-1.5">
-                      {[
-                        { color: "#2563eb", label: "Blue" },
-                        { color: "#059669", label: "Emerald" },
-                        { color: "#d97706", label: "Amber" },
-                        { color: "#7c3aed", label: "Violet" },
-                        { color: "#e11d48", label: "Rose" },
-                        { color: "#0284c7", label: "Cyan" }
-                      ].map((c) => (
-                        <button
-                          key={c.color}
-                          onClick={() => setDrawColor(c.color)}
-                          style={{ backgroundColor: c.color }}
-                          className={`w-5 h-5 rounded-full cursor-pointer transition-transform ${
-                            drawColor === c.color ? "ring-2 ring-white scale-125" : "opacity-80 hover:opacity-100"
-                          }`}
-                          title={c.label}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Current Active Points List & Coordinate Inputs */}
-                <div className="pt-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-stone-200 flex items-center gap-1">
-                      📍 Active Points ({drawnPoints.length})
-                    </span>
-                    <div className="flex items-center gap-1 text-[10px]">
-                      {drawnPoints.length > 0 && (
-                        <>
-                          <button
-                            onClick={handleUndoPoint}
-                            className="px-2 py-0.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded font-semibold cursor-pointer"
-                          >
-                            ↩️ Undo
-                          </button>
-                          <button
-                            onClick={handleClearPoints}
-                            className="px-2 py-0.5 bg-rose-900/80 hover:bg-rose-800 text-rose-200 rounded font-semibold cursor-pointer"
-                          >
-                            🗑️ Clear
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {drawnPoints.length === 0 ? (
-                    <div className="bg-stone-800/60 p-3 rounded-xl border border-stone-800 text-center text-stone-400 text-[11px]">
-                      👆 I-click ang anumang bahagi ng mapa para maglagay ng tuldok ng boundary!
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1 text-[10px] font-mono divide-y divide-stone-800">
-                      {drawnPoints.map((p, idx) => (
-                        <div key={idx} className="pt-1 flex items-center justify-between gap-1">
-                          <span className="text-amber-400 font-bold shrink-0">#{idx + 1}</span>
-                          <input
-                            type="number"
-                            step="0.000001"
-                            value={p.lat}
-                            onChange={(e) => {
-                              const val = parseFloat(e.target.value);
-                              if (!isNaN(val)) {
-                                const newP = [...drawnPoints];
-                                newP[idx] = { ...newP[idx], lat: val };
-                                setDrawnPoints(newP);
-                              }
-                            }}
-                            className="w-20 bg-stone-800 border border-stone-700 rounded px-1 py-0.5 text-stone-200 focus:outline-none focus:border-amber-500"
-                          />
-                          <input
-                            type="number"
-                            step="0.000001"
-                            value={p.lng}
-                            onChange={(e) => {
-                              const val = parseFloat(e.target.value);
-                              if (!isNaN(val)) {
-                                const newP = [...drawnPoints];
-                                newP[idx] = { ...newP[idx], lng: val };
-                                setDrawnPoints(newP);
-                              }
-                            }}
-                            className="w-20 bg-stone-800 border border-stone-700 rounded px-1 py-0.5 text-stone-200 focus:outline-none focus:border-amber-500"
-                          />
-                          <button
-                            onClick={() => {
-                              const newP = drawnPoints.filter((_, i) => i !== idx);
-                              setDrawnPoints(newP);
-                            }}
-                            className="text-stone-500 hover:text-rose-400 font-bold px-1"
-                            title="Burahin ang tuldok na ito"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Save Boundary Section */}
-                <div className="pt-3 space-y-2">
-                  <label className="block text-xs font-semibold text-stone-300">
-                    Piliin o Isulat ang Barangay:
-                  </label>
-                  <select
-                    value={selectedBarangayToSave}
-                    onChange={(e) => setSelectedBarangayToSave(e.target.value)}
-                    className="w-full bg-stone-800 border border-stone-700 text-stone-200 text-xs font-bold rounded-xl p-2 focus:outline-none focus:border-amber-500"
-                  >
-                    <option value="Barangay Tabing Dagat">Barangay Tabing Dagat</option>
-                    <option value="Barangay Villa Nava">Barangay Villa Nava</option>
-                    <option value="Barangay San Diego">Barangay San Diego</option>
-                    <option value="Barangay Bagong Buhay">Barangay Bagong Buhay</option>
-                    <option value="Barangay Rizal">Barangay Rizal</option>
-                    <option value="Barangay Rosario">Barangay Rosario</option>
-                    <option value="Barangay Pipisik">Barangay Pipisik</option>
-                    <option value="Barangay Buensuceso">Barangay Buensuceso</option>
-                    <option value="Barangay Mabini">Barangay Mabini</option>
-                    <option value="Barangay Peñafrancia">Barangay Peñafrancia</option>
-                    <option value="Barangay Progreso Purok 1">Barangay Progreso Purok 1</option>
-                    <option value="Barangay Maunlad">Barangay Maunlad</option>
-                  </select>
-
-                  <button
-                    onClick={handleSaveBoundary}
-                    disabled={drawnPoints.length < 2}
-                    className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed active:scale-95"
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>💾 I-save ang Boundary sa {selectedBarangayToSave}</span>
-                  </button>
-                </div>
-
-                {/* Saved Barangay Boundaries List & Manual Editor Actions */}
-                <div className="pt-3 space-y-2">
-                  {showConfirmDeleteAll ? (
-                    <div className="bg-rose-950/90 border border-rose-700/80 p-2.5 rounded-xl text-xs space-y-2 text-rose-100 animate-fade-in">
-                      <p className="font-bold text-[11px] leading-tight">
-                        ⚠️ Sigurado ka bang gusto mong burahin ang LAHAT ng {drawnBarangayBoundaries.length} na-save na barangay boundary?
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDrawnBarangayBoundaries([]);
-                            localStorage.setItem("barangay_drawn_boundaries", JSON.stringify([]));
-                            setSelectedBarangayBoundaryFilter("");
-                            setShowConfirmDeleteAll(false);
-                            setCopySuccessMsg("🗑️ Matagumpay na nabura ang LAHAT ng na-save na barangay boundary!");
-                            setTimeout(() => setCopySuccessMsg(""), 3500);
-                          }}
-                          className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-extrabold py-1.5 px-2 rounded-lg text-[10px] cursor-pointer transition-colors text-center"
-                        >
-                          Oo, Burahin Lahat
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmDeleteAll(false)}
-                          className="bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold py-1.5 px-2 rounded-lg text-[10px] cursor-pointer transition-colors"
-                        >
-                          Kanselahin
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between text-xs font-bold text-stone-300">
-                      <span>📋 Saved Boundaries ({drawnBarangayBoundaries.length})</span>
-                      {drawnBarangayBoundaries.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmDeleteAll(true)}
-                          className="text-[10px] bg-rose-950/80 hover:bg-rose-900 border border-rose-800/80 text-rose-300 font-bold px-2 py-0.5 rounded-lg cursor-pointer transition-colors"
-                        >
-                          🗑️ Burahin Lahat
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {drawnBarangayBoundaries.length === 0 ? (
-                    <div className="bg-stone-800/40 p-3 rounded-xl text-center space-y-2 border border-stone-700/50">
-                      <p className="text-[10px] text-stone-400 italic">
-                        Wala pang nai-save na barangay boundary. Iguhit ang iyong unang boundary sa mapa o i-restore ang default list!
-                      </p>
-                      <button
-                        type="button"
-                        onClick={handleRestoreDefaultBoundaries}
-                        className="text-[10px] bg-indigo-900/80 hover:bg-indigo-800 border border-indigo-700/80 text-indigo-200 font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-all active:scale-95"
-                      >
-                        ✨ Restore Default 12 Barangay Boundaries
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                      {drawnBarangayBoundaries.map((b) => (
-                        <div
-                          key={b.id}
-                          className="bg-stone-800/90 p-2.5 rounded-xl border border-stone-700/80 flex flex-col gap-1.5"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5 font-bold text-xs text-white">
-                              <span
-                                className="w-3 h-3 rounded-full shrink-0 border border-white/20"
-                                style={{ backgroundColor: b.color }}
-                              />
-                              <span>{b.barangayName}</span>
-                            </div>
-                            <span className="text-[10px] font-mono text-stone-400">
-                              {b.points.length} points
-                            </span>
-                          </div>
-
-                          {/* Editing Actions for this Saved Boundary */}
-                          <div className="flex items-center gap-1 pt-1 border-t border-stone-700/50 text-[10px]">
-                            <button
-                              onClick={() => {
-                                // Load existing boundary points into the drawing canvas for editing!
-                                setDrawnPoints(b.points.map(p => ({ lat: p[0], lng: p[1] })));
-                                setSelectedBarangayToSave(b.barangayName);
-                                setDrawColor(b.color);
-                                setIsDrawingMode(true);
-                              }}
-                              className="flex-1 py-1 px-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-center cursor-pointer transition-colors"
-                              title="Kargahin ang mga tuldok para i-edit o dagdagan"
-                            >
-                              ✏️ I-edit ang Points
-                            </button>
-
-                            <button
-                              onClick={() => {
-                                setSelectedBarangayBoundaryFilter(b.barangayName);
-                                setShowBoundariesOnMap(true);
-                                if (leafletMapRef.current && b.points.length > 0) {
-                                  const bounds = L.latLngBounds(b.points);
-                                  leafletMapRef.current.fitBounds(bounds, { padding: [50, 50] });
-                                }
-                              }}
-                              className="py-1 px-2 bg-stone-700 hover:bg-stone-600 text-stone-200 font-semibold rounded-lg cursor-pointer"
-                              title="Tumingin sa mapa"
-                            >
-                              👁️ View
-                            </button>
-
-                            <button
-                              onClick={() => handleDeleteBoundary(b.id)}
-                              className="py-1 px-2 bg-rose-950/80 hover:bg-rose-800 text-rose-300 font-semibold rounded-lg cursor-pointer"
-                              title="Burahin ang boundary"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
         {/* Hover / Selection Preview Card (Draggable over the map) */}
         {!isPropertyCardDismissed && (hoveredProperty || selectedProperty) && mapMode !== "google_embed" && (
           <motion.div
@@ -3348,7 +2310,6 @@ export default function NeighborhoodMap({
                 setIsPropertyCardDismissed(true);
                 setHoveredProperty(null);
                 onSelectProperty(null as any);
-                setActiveArrowLocation(null);
                 setActiveSchoolRouteFilter("none");
                 setDismissedSchoolId(selectedSchoolId || "none");
                 if (routeLayerRef.current) {
@@ -3415,7 +2376,7 @@ export default function NeighborhoodMap({
 
                   {nearestSchool && (
                     <div className={`border-t border-stone-100 flex items-center justify-between text-stone-500 ${isFullscreen ? "mt-1.5 sm:mt-2.5 pt-1 sm:pt-2 text-[9px] sm:text-[10px]" : "mt-1 pt-0.5 text-[8px]"}`}>
-                      <span className="truncate">🎓 {nearestSchool.shortName || nearestSchool.name.replace(/ [🎓🏫🏛️]/g, '')}</span>
+                      <span className="truncate">🎓 {nearestSchool.shortName || nearestSchool.name.replace(/ [🎓]/g, '')}</span>
                       <span className="font-bold text-indigo-600 font-mono shrink-0 whitespace-nowrap ml-1">{nearestSchool.walkingMinutes}m</span>
                     </div>
                   )}
