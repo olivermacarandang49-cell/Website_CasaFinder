@@ -1,10 +1,10 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
 import L from "leaflet";
 import { motion } from "motion/react";
-import { GUMACA_SCHOOLS, getSchoolDistancesForProperty, getGumacaSchools, saveCustomSchoolCoord, resetCustomSchoolCoords, addCustomSchoolItem, deleteCustomSchoolItem, saveCustomPropertyCoord, getCustomPropertyCoords, resetCustomPropertyCoords, parsePropertyLatLng } from "../utils/schoolDistances";
+import { GUMACA_SCHOOLS, getSchoolDistancesForProperty, getGumacaSchools, saveCustomSchoolCoord, resetCustomSchoolCoords, addCustomSchoolItem, deleteCustomSchoolItem, parsePropertyLatLng } from "../utils/schoolDistances";
 import { AiMatch } from "../types";
 import { Property } from "../data/properties";
-import { Map, MapPin, Navigation, Layers, Compass, ExternalLink, School, Info, Search, Maximize2, Minimize2, Pencil, Trash2, Copy, Check, RotateCcw, Save, Ruler, Footprints, GripHorizontal } from "lucide-react";
+import { Map, Navigation, Compass, Search, Maximize2, Minimize2 } from "lucide-react";
 
 interface NeighborhoodMapProps {
   properties: Property[];
